@@ -1,0 +1,68 @@
+﻿@page
+@model SRRAMOils.Pages.OrganizationModel
+@{
+}
+@* 
+PSEUDOCODE / PLAN:
+- Create responsive table container wrapper for horizontal scrolling on small screens.
+- Add CSS styles for:
+  - full-width table, compact padding, readable font sizes
+  - zebra striping for rows, hover highlight
+  - sticky header for better UX on long tables
+  - subtle borders and rounded corners, accessible contrast
+  - responsive adjustments for small screens (stacking cells via data-attributes if needed)
+- Update table markup to include semantic elements and classes:
+  - add `caption` for accessibility
+  - apply `org-table` and `table-responsive` classes
+  - preserve existing Razor loops generating headers and rows
+- Keep existing form and structure intact; only enhance table presentation with CSS.
+*@
+
+
+
+<div class="container mt-5">
+    <h2 class="mb-4">Add Organization</h2>
+    <form method="post">
+        <div class="mb-3">
+            <label for="vendorName" class="mb-2">Organization Name</label>
+            <input type="text" class="form-control" id="txtOrganizationName" name="OrganizationName" placeholder="Enter Organization name">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+<h2>Organizations</h2>
+
+@if (Model.Organizations == null || Model.Organizations.Count == 0)
+{
+    <p>No data.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table id="tableOrginazations" class="org-table" role="table" aria-label="Organizations table">
+            <caption class="org-caption">List of organizations</caption>
+            <thead>
+                <tr>
+                    @foreach (var header in Model.Organizations[0].Keys)
+                    {
+                        <th scope="col">@header</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model.Organizations)
+                {
+                    <tr>
+                        @foreach (var kv in row)
+                        {
+                            <td>@kv.Value</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+
+}
