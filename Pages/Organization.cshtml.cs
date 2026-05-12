@@ -1,16 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SRRAMOils.Models;
 using SRRAMOils.Service;
 using System.Data;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace SRRAMOils.Pages
 {
     public class OrganizationModel : PageModel
     {
-      
+
 
         [BindProperty]
         public string OrganizationName { get; set; } = string.Empty;
@@ -46,10 +43,33 @@ namespace SRRAMOils.Pages
             Results.Ok(Organizations); // Return an empty list or modify as needed
         }
 
-        public void OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
-            var name = OrganizationName;
-            // Existing behavior preserved; saving logic can be added here if needed.
+            var orgName = OrganizationName;
+            OrganizationService Org = new OrganizationService();
+            if (string.IsNullOrWhiteSpace(orgName))
+            {
+                return BadRequest(new { success = false, error = "OrganizationName is required" });
+
+            }
+
+            if (!await Org.CheckOrgianization(orgName))
+            {
+
+            }
+            else
+            {
+                return BadRequest(new { success = false, error = "Organization Name already available." });
+            }
+
+           
+
+            // TODO: save OrganizationName to database here (await db.SaveChangesAsync();)
+
+            // return JSON that your JS expects
+            return new JsonResult(new { success = true, name = OrganizationName });
         }
-    }
+    } 
+
 }
+   
