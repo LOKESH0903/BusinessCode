@@ -2,32 +2,15 @@
 @model SRRAMOils.Pages.OrganizationModel
 @{
 }
-@* 
-PSEUDOCODE / PLAN:
-- Create responsive table container wrapper for horizontal scrolling on small screens.
-- Add CSS styles for:
-  - full-width table, compact padding, readable font sizes
-  - zebra striping for rows, hover highlight
-  - sticky header for better UX on long tables
-  - subtle borders and rounded corners, accessible contrast
-  - responsive adjustments for small screens (stacking cells via data-attributes if needed)
-- Update table markup to include semantic elements and classes:
-  - add `caption` for accessibility
-  - apply `org-table` and `table-responsive` classes
-  - preserve existing Razor loops generating headers and rows
-- Keep existing form and structure intact; only enhance table presentation with CSS.
-*@
-
-
-
 <div class="container mt-5">
     <h2 class="mb-4">Add Organization</h2>
-    <form method="post">
+    <form id="orgForm" method="post">
+        @Html.AntiForgeryToken()
         <div class="mb-3">
             <label for="vendorName" class="mb-2">Organization Name</label>
             <input type="text" class="form-control" id="txtOrganizationName" name="OrganizationName" placeholder="Enter Organization name">
         </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="button" id="btnSubmit" class="btn btn-primary">Submit via AJAX</button>
     </form>
 </div>
 
@@ -64,5 +47,41 @@ else
         </table>
     </div>
 
+    <script type="text/javascript">
+        $(function () {
+            $('#btnSubmit').on('click', function () {
+                var name = $('#txtOrganizationName').val().trim();
+                if (!name) {
+                    alert('Please enter an organization name.');
+                    return;
+                }
 
+                // Read antiforgery token from the generated hidden input
+                var token = $('input[name="__RequestVerificationToken"]').val();
+
+                $.ajax({
+                    url: window.location.pathname,
+                    method: 'POST',
+                    data: {
+                        OrganizationName: name,
+                        __RequestVerificationToken: token
+                    },
+                    success: function (response) {
+                        if (response && response.success) {
+                            alert('Saved: ' + response.name);
+                            // Optionally: append to table or reload page to refresh list
+                            // location.reload();
+                            $('#txtOrganizationName').val('');
+                        } else {
+                            alert('Save failed.');
+                        }
+                    },
+                    error: function (xhr) {
+                        alert('Error: ' + (xhr.responseText || xhr.statusText));
+                    }
+                });
+            });
+        });
+    </script>
+    
 }
