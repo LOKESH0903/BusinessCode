@@ -55,7 +55,10 @@ namespace SRRAMOils.Pages
 
             if (!await Org.CheckOrgianization(orgName))
             {
-
+                if(await Org.AddOrganization(orgName))
+                {
+                    return new JsonResult(new { success = true, name = OrganizationName });
+                }
             }
             else
             {

@@ -1,6 +1,9 @@
-﻿using SRRAMOils.DBRepository;
+﻿using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using SRRAMOils.DBRepository;
 
 namespace SRRAMOils.Service
 {
@@ -89,6 +92,55 @@ namespace SRRAMOils.Service
                 Console.WriteLine($"Error checking organization: {ex.Message}");
             }
 
+            return false;
+        }
+
+
+        public async Task<bool> AddOrganization(string OrgName)
+        {
+            try
+            {
+                // Load configuration and obtain connection string.
+                var configuration = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                    .Build();
+                // Try common keys for connection string
+                var connectionString = configuration.GetConnectionString("DevConnection")
+                                       ?? configuration["ConnectionStrings:DefaultConnection"]
+                                       ?? configuration["ConnectionString"]
+                                       ?? configuration["ConnectionStrings:Connection"];
+                if (string.IsNullOrWhiteSpace(connectionString))
+                {
+                    throw new InvalidOperationException("Database connection string not found in configuration.");
+                }
+                await using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "INSERT INTO Organization (OrganizationName,IsActive) VALUES (@OrgName,@IsActive)";
+                var param = new SqlParameter("@OrgName", SqlDbType.NVarChar, 256)
+                {
+                    Value = OrgName ?? (object)DBNull.Value
+                };
+
+                var isActiveParam = new SqlParameter("@IsActive", SqlDbType.Bit)
+                {
+                    Value = true
+                };
+
+                command.Parameters.Add(param);
+                command.Parameters.Add(isActiveParam);
+
+                var rowsAffected = await command.ExecuteNonQueryAsync();
+                if (rowsAffected > 0)
+                {
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (for demonstration, we're writing to console)
+                Console.WriteLine($"Error adding organization: {ex.Message}");
+            }
             return false;
         }
     }
