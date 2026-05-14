@@ -4,11 +4,116 @@
 }
 <div class="container mt-5">
     <h2 class="mb-4">Add Vendor</h2>
-    <form method="post">
-        <div class="mb-3">
-            <label for="vendorName" class="mb-2">Vendor Name</label>
-            <input type="text" class="form-control" id="vendorName" name="vendorName" placeholder="Enter vendor name">
+
+    <div id="formAlert" class="mb-3" role="alert" style="display:none;"></div>
+
+    <form method="post" novalidate>
+        <div class="row g-3">
+            <div class="col-12">
+                <label for="vendorName" class="form-label">Vendor Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="vendorName" name="VendorName" required maxlength="200" placeholder="Enter vendor name" />
+            </div>
+            <div class="col-md-4">
+                <label for="contactName" class="form-label">Vendor GST</label>
+                <input type="text" class="form-control" id="contactName" name="ContactName" required maxlength="150" placeholder="Contact person" />
+            </div>
+
+            <div class="col-md-4">
+                <label for="email" class="form-label">Vendor Email <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" id="email" name="Email"  maxlength="254" placeholder="name@example.com" />
+            </div>
+            <div class="col-md-4">
+                <label for="phone" class="form-label">Vendor Phone</label>
+                <input type="tel" class="form-control" id="phone" name="Phone" pattern="[\d\-\+\s\(\)]{7,25}" required maxlength="25" placeholder="+91 9999999999" />
+                <div class="form-text">Include country code if applicable.</div>
+            </div>
+
+    
+            <div class="col-md-4">
+                <label for="city" class="form-label">Bank Name</label>
+                <input type="text" class="form-control" id="txtbankName" name="txtbankName" required maxlength="100" />
+            </div>
+            <div class="col-md-4">
+                <label for="state" class="form-label">Bank Account Number</label>
+                <input type="text" class="form-control" id="txtBankAccountNumber" name="txtBankAccountNumber" required maxlength="100" />
+            </div>
+            <div class="col-md-4">
+                <label for="zip" class="form-label">Bank IFSC</label>
+                <input type="text" class="form-control" id="txtBankIFSC" name="txtBankIFSC" required maxlength="20" />
+            </div>
+
+            <div class="col-md-4">
+                <label for="city" class="form-label">Bank Branch</label>
+                <input type="text" class="form-control" id="txtbankBranch" name="txtbankBranch" required maxlength="100" />
+            </div>
+
+
+            <div class="col-md-4">
+                <label for="country" class="form-label">City</label>
+                <select id="ddlCity" name="ddlCity" required class="form-select">
+                    <option value="">Select City</option>
+                    <option>United States</option>
+                    <option>Canada</option>
+                    <option>Mexico</option>
+                    <option>United Kingdom</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="website" class="form-label">Website</label>
+                <input type="url" class="form-control" id="website" name="Website" maxlength="2083" placeholder="https://example.com" />
+            </div>
+
+            <div class="col-12">
+                <label for="notes" class="form-label">Address</label>
+                <textarea id="notes" name="Notes" class="form-control" rows="4" maxlength="2000" placeholder="Additional information about the vendor"></textarea>
+            </div>
+
+            <div class="col-md-6 d-flex align-items-center">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="isActive" name="IsActive" checked />
+                    <label class="form-check-label" for="isActive">Active</label>
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <small class="text-muted">All fields marked <span class="text-danger">*</span> are required.</small>
+            </div>
+
+            <div class="col-12 mt-3">
+                <button type="submit" class="btn btn-primary">Save Vendor</button>
+                <a asp-page="./Index" class="btn btn-secondary ms-2">Cancel</a>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 </div>
+
+@section Scripts {
+    <script>
+        // Simple client-side form UI helper: display HTML5 validity messages in the alert area
+        (function () {
+            const form = document.querySelector('form[method="post"]');
+            const alertEl = document.getElementById('formAlert');
+
+            if (!form) return;
+
+            form.addEventListener('submit', function (e) {
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alertEl.style.display = 'block';
+                    alertEl.className = 'alert alert-danger';
+                    alertEl.textContent = 'Please correct the highlighted fields and try again.';
+                    // Let browser show native validation UI
+                    form.classList.add('was-validated');
+                } else {
+                    // Optionally show a submitting state
+                    const btn = form.querySelector('button[type="submit"]');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = 'Saving...';
+                    }
+                }
+            }, false);
+        })();
+    </script>
+}
