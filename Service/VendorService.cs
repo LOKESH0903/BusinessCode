@@ -56,7 +56,7 @@ namespace SRRAMOils.Service
             string bankAccountNumber,
             string bankIFSC,
             string bankBranch,
-            string cityId,
+            int cityId,
             string website,
             string address,
             bool isActive)
@@ -92,7 +92,7 @@ namespace SRRAMOils.Service
                 command.Parameters.Add(new SqlParameter("@VendorBankAccountNumber", SqlDbType.NVarChar, 100) { Value = bankAccountNumber ?? (object)DBNull.Value });
                 command.Parameters.Add(new SqlParameter("@VendorBankIFSCCode", SqlDbType.NVarChar, 20) { Value = bankIFSC ?? (object)DBNull.Value });
                 command.Parameters.Add(new SqlParameter("@VendorBankBranch", SqlDbType.NVarChar, 100) { Value = bankBranch ?? (object)DBNull.Value });
-                command.Parameters.Add(new SqlParameter("@CityId", SqlDbType.NVarChar, 50) { Value = cityId ?? (object)DBNull.Value });
+                command.Parameters.Add(new SqlParameter("@CityId", SqlDbType.NVarChar, 50) { Value = cityId  });
                 command.Parameters.Add(new SqlParameter("@VendorAddress", SqlDbType.NVarChar, 2000) { Value = address ?? (object)DBNull.Value });
                 command.Parameters.Add(new SqlParameter("@IsActive", SqlDbType.Bit) { Value = isActive });
 

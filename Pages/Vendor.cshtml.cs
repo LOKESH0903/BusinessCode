@@ -58,11 +58,18 @@ namespace SRRAMOils.Pages
 
             if (!await VS.CheckVendor(name))
             {
-                // Vendor already exists, handle accordingly (e.g., show an error message)
+                if(await VS.AddVendor(name, gst,string.Empty, phoneNumber, bankName, bankAccountNumber, bankIFSCCode, bankBranch, cityId, string.Empty, address, true))
+                {
+
+                }
+                else
+                {
+                    return BadRequest(new { success = false, error = "Error." });
+                }
             }
             else
             {
-                return BadRequest(new { success = false, error = "Organization Name already available." });
+                return BadRequest(new { success = false, error = "Vendor Name already available." });
             }
 
             return new JsonResult(new { success = true, name = VendorName });
