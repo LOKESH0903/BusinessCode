@@ -14,8 +14,8 @@
                 <input type="text" class="form-control" id="vendorName" name="VendorName" required maxlength="200" placeholder="Enter vendor name" />
             </div>
             <div class="col-md-4">
-                <label for="contactName" class="form-label">Vendor GST</label>
-                <input type="text" class="form-control" id="contactName" name="ContactName" required maxlength="150" placeholder="Contact person" />
+                <label for="GST" class="form-label">Vendor GST</label>
+                <input type="text" class="form-control" id="txtGST" name="VendorGST" required maxlength="150" placeholder="Vendor GST" />
             </div>
 
             <div class="col-md-4">
@@ -24,33 +24,33 @@
             </div>
             <div class="col-md-4">
                 <label for="phone" class="form-label">Vendor Phone</label>
-                <input type="tel" class="form-control" id="phone" name="Phone" pattern="[\d\-\+\s\(\)]{7,25}" required maxlength="25" placeholder="+91 9999999999" />
+                <input type="tel" class="form-control" id="phone" name="VendorPhoneNumber" pattern="[\d\-\+\s\(\)]{7,25}" required maxlength="25" placeholder="+91 9999999999" />
                 <div class="form-text">Include country code if applicable.</div>
             </div>
 
     
             <div class="col-md-4">
                 <label for="city" class="form-label">Bank Name</label>
-                <input type="text" class="form-control" id="txtbankName" name="txtbankName" required maxlength="100" />
+                <input type="text" class="form-control" id="txtbankName" name="VendorBankName" required maxlength="100" />
             </div>
             <div class="col-md-4">
                 <label for="state" class="form-label">Bank Account Number</label>
-                <input type="text" class="form-control" id="txtBankAccountNumber" name="txtBankAccountNumber" required maxlength="100" />
+                <input type="text" class="form-control" id="txtBankAccountNumber" name="VendorBankAccountNumber" required maxlength="100" />
             </div>
             <div class="col-md-4">
                 <label for="zip" class="form-label">Bank IFSC</label>
-                <input type="text" class="form-control" id="txtBankIFSC" name="txtBankIFSC" required maxlength="20" />
+                <input type="text" class="form-control" id="txtBankIFSC" name="VendorBankIFSCCode" required maxlength="20" />
             </div>
 
             <div class="col-md-4">
                 <label for="city" class="form-label">Bank Branch</label>
-                <input type="text" class="form-control" id="txtbankBranch" name="txtbankBranch" required maxlength="100" />
+                <input type="text" class="form-control" id="txtbankBranch" name="VendorBankBranch" required maxlength="100" />
             </div>
 
 
             <div class="col-md-4">
                 <label for="country" class="form-label">City</label>
-                <select id="ddlCity" name="ddlCity" required class="form-select">
+                <select id="ddlCity" name="CityId" required class="form-select">
                     <option value="">Select City</option>
                     <option>United States</option>
                     <option>Canada</option>
@@ -66,7 +66,7 @@
 
             <div class="col-12">
                 <label for="notes" class="form-label">Address</label>
-                <textarea id="notes" name="Notes" class="form-control" rows="4" maxlength="2000" placeholder="Additional information about the vendor"></textarea>
+                <textarea id="VendorAddress" name="VendorAddress" class="form-control" rows="4" maxlength="2000" placeholder="Additional information about the vendor"></textarea>
             </div>
 
             <div class="col-md-6 d-flex align-items-center">
@@ -89,30 +89,102 @@
 
 @section Scripts {
     <script>
-        // Simple client-side form UI helper: display HTML5 validity messages in the alert area
+        /* PSEUDOCODE / PLAN:
+         - Get references: form, alert element, submit button.
+         - Maintain a `submitting` flag to prevent duplicate submissions.
+         - On form submit:
+             - Prevent default immediately to stop native POST.
+             - Run client-side validation via form.checkValidity().
+             - If invalid: show error alert, add 'was-validated' class, return.
+             - If valid and not already submitting:
+                 - Set submitting = true, disable submit button and show "Saving..." text.
+                 - Serialize the entire form including antiforgery token using $(form).serialize().
+                 - Send AJAX POST to window.location.pathname.
+                 - On success: if response.success show success alert and reset form (or handle redirect); otherwise show error message.
+                 - On error: show error alert with message.
+                 - In complete callback: clear submitting flag and restore submit button state.
+         - This guarantees only one POST is sent (either native or AJAX) and prevents double POSTs by always preventing default and using the `submitting` guard.
+         */
+
         (function () {
             const form = document.querySelector('form[method="post"]');
             const alertEl = document.getElementById('formAlert');
+            const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+            let submitting = false;
 
             if (!form) return;
 
             form.addEventListener('submit', function (e) {
+                // Always prevent default so native form POST is not fired when we do AJAX
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Client-side validation
                 if (!form.checkValidity()) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    alertEl.style.display = 'block';
-                    alertEl.className = 'alert alert-danger';
-                    alertEl.textContent = 'Please correct the highlighted fields and try again.';
-                    // Let browser show native validation UI
-                    form.classList.add('was-validated');
-                } else {
-                    // Optionally show a submitting state
-                    const btn = form.querySelector('button[type="submit"]');
-                    if (btn) {
-                        btn.disabled = true;
-                        btn.innerHTML = 'Saving...';
+                    if (alertEl) {
+                        alertEl.style.display = 'block';
+                        alertEl.className = 'alert alert-danger';
+                        alertEl.textContent = 'Please correct the highlighted fields and try again.';
                     }
+                    form.classList.add('was-validated');
+                    return;
                 }
+
+                // Prevent duplicate submissions
+                if (submitting) {
+                    return;
+                }
+                submitting = true;
+
+                // Disable submit button and show loading state
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.dataset.origText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = 'Saving...';
+                }
+
+                // Serialize form data (includes __RequestVerificationToken if present)
+                const data = $(form).serialize();
+
+                $.ajax({
+                    url: window.location.pathname,
+                    method: 'POST',
+                    data: data,
+                    success: function (response) {
+                        if (alertEl) {
+                            alertEl.style.display = 'block';
+                        }
+                        if (response && response.success) {
+                            if (alertEl) {
+                                alertEl.className = 'alert alert-success';
+                                alertEl.textContent = response.message || 'Saved successfully.';
+                            }
+                            // Reset form / remove validation styles
+                            form.classList.remove('was-validated');
+                            form.reset();
+                        } else {
+                            if (alertEl) {
+                                alertEl.className = 'alert alert-danger';
+                                alertEl.textContent = response && response.error ? response.error : 'Save failed.';
+                            }
+                        }
+                    },
+                    error: function (xhr) {
+                        if (alertEl) {
+                            alertEl.style.display = 'block';
+                            alertEl.className = 'alert alert-danger';
+                            const msg = xhr && xhr.responseText ? xhr.responseText : xhr.statusText || 'An error occurred.';
+                            alertEl.textContent = 'Error: ' + msg;
+                        }
+                    },
+                    complete: function () {
+                        submitting = false;
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = submitBtn.dataset.origText || 'Save Vendor';
+                        }
+                    }
+                });
             }, false);
         })();
     </script>
