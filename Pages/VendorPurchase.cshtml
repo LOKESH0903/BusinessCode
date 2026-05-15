@@ -19,7 +19,6 @@
 			<select id="ddlVendorId" name="vendorId" required class="form-select">
 				@foreach (var vendor in Model.VendorOptions)
 				{
-					// Preserve selection if form re-displays after post
 					var selected = vendor.Value == Model.VendorName ? "selected" : null;
 					<option value="@vendor.Value" selected="@selected">@vendor.Text</option>
 				}
@@ -122,12 +121,14 @@
                             }
                             // Reset form / remove validation styles
                             form.classList.remove('was-validated');
+                            alert("Success");
                             form.reset();
                         } else {
                             if (alertEl) {
                                 alertEl.className = 'alert alert-danger';
                                 alertEl.textContent = response && response.error ? response.error : 'Save failed.';
                             }
+                            alert("Fail");
                         }
                     },
                     error: function (xhr) {

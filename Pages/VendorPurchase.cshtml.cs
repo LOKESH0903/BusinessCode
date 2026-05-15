@@ -79,7 +79,10 @@ namespace SRRAMOils.Pages
             var isGst = IsGst;
 
             VendorService vs = new VendorService();
-           await vs.AddVendorPurchase(vendorId, InvoiceNumber, PurchaseAmount, OrderDate, 0, IsGst, false);
+            if(!await vs.AddVendorPurchase(vendorId, InvoiceNumber, PurchaseAmount, OrderDate, 0, IsGst, false))
+            {
+                return new JsonResult(new { success = true, name = "VendorName" });
+            }
 
             return new JsonResult(new { success = true, name = "VendorName" });
         }
