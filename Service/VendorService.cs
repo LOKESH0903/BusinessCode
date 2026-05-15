@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using SRRAMOils.Models;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace SRRAMOils.Service
@@ -92,7 +93,7 @@ namespace SRRAMOils.Service
                 command.Parameters.Add(new SqlParameter("@VendorBankAccountNumber", SqlDbType.NVarChar, 100) { Value = bankAccountNumber ?? (object)DBNull.Value });
                 command.Parameters.Add(new SqlParameter("@VendorBankIFSCCode", SqlDbType.NVarChar, 20) { Value = bankIFSC ?? (object)DBNull.Value });
                 command.Parameters.Add(new SqlParameter("@VendorBankBranch", SqlDbType.NVarChar, 100) { Value = bankBranch ?? (object)DBNull.Value });
-                command.Parameters.Add(new SqlParameter("@CityId", SqlDbType.NVarChar, 50) { Value = cityId  });
+                command.Parameters.Add(new SqlParameter("@CityId", SqlDbType.NVarChar, 50) { Value = cityId });
                 command.Parameters.Add(new SqlParameter("@VendorAddress", SqlDbType.NVarChar, 2000) { Value = address ?? (object)DBNull.Value });
                 command.Parameters.Add(new SqlParameter("@IsActive", SqlDbType.Bit) { Value = isActive });
 
@@ -106,5 +107,43 @@ namespace SRRAMOils.Service
             }
         }
 
+
+        public async Task<List<DropDownModel>> GetVendorNames()
+        {
+            var vendorNames = new List<DropDownModel>();
+            try
+            {
+                var configuration = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                    .Build();
+                var connectionString = configuration.GetConnectionString("DevConnection")
+                                       ?? configuration["ConnectionStrings:DefaultConnection"]
+                                       ?? configuration["ConnectionString"]
+                                       ?? configuration["ConnectionStrings:Connection"];
+                if (string.IsNullOrWhiteSpace(connectionString))
+                    throw new InvalidOperationException("Database connection string not found in configuration.");
+                await using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "SELECT Id, VendorName FROM Vendor WHERE IsActive = 1";
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
+                    {
+                        vendorNames.Add(new DropDownModel
+                        {
+                            Id = reader.GetInt32(0),
+                            Name = reader.GetString(1)
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving vendor names: {ex.Message}");
+            }
+            return vendorNames;
+        }
     }
 }

@@ -1,0 +1,29 @@
+﻿@page
+@model SRRAMOils.Pages.VendorPurchaseModel
+@{
+}
+
+@* Pseudocode / Plan:
+   - Remove all `asp-for` and `asp-validation-for` tag helpers.
+   - Replace labels with explicit `for` attributes and human-readable text.
+   - Replace inputs with explicit `name` and `id` attributes to preserve model binding.
+   - For boolean checkboxes, add a preceding hidden input with value="false" and set checkbox value="true".
+   - Replace validation spans with `data-valmsg-for` and `data-valmsg-replace="true"` so unobtrusive validation can still wire up.
+   - Keep antiforgery token, validation summary, and validation scripts partial intact.
+*@
+
+<form method="post" novalidate>
+	<div class="row g-3">
+		<div class="col-md-12">
+			<label for="Vendor" class="form-label">Select Vendor</label>
+			<select id="Id" name="VendorName" required class="form-select">
+				@foreach (var vendor in Model.VendorOptions)
+				{
+					// Preserve selection if form re-displays after post
+					var selected = vendor.Value == Model.VendorName ? "selected" : null;
+					<option value="@vendor.Value" selected="@selected">@vendor.Text</option>
+				}
+			</select>
+		</div>
+	</div>
+</form>
