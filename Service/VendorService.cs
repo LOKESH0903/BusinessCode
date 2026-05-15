@@ -1,6 +1,7 @@
 ﻿using SRRAMOils.Models;
 using System.Data;
 using System.Data.SqlClient;
+using System.Net;
 
 namespace SRRAMOils.Service
 {
@@ -144,6 +145,50 @@ namespace SRRAMOils.Service
                 Console.WriteLine($"Error retrieving vendor names: {ex.Message}");
             }
             return vendorNames;
+        }
+
+        public async Task<bool> AddVendorPurchase(int VendorId, string InvoiceNumber, decimal Amount, DateTime OrderDate, decimal TravelCharge, bool IsGSTBill, bool ISPaymentDone)
+        {
+            try
+            {
+                var configuration = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                    .Build();
+
+                var connectionString = configuration.GetConnectionString("DevConnection")
+                                       ?? configuration["ConnectionStrings:DefaultConnection"]
+                                       ?? configuration["ConnectionString"]
+                                       ?? configuration["ConnectionStrings:Connection"];
+
+                if (string.IsNullOrWhiteSpace(connectionString))
+                    throw new InvalidOperationException("Database connection string not found in configuration.");
+
+                await using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync();
+
+                await using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    INSERT INTO VendorPurchase
+                    (VendorId,InvoiceNumber,Amount,OrderDate,TravelCharge,IsGSTBill)
+                    VALUES
+                    (@VendorId,@InvoiceNumber,@Amount,@OrderDate,@TravelCharge,@IsGSTBill)";
+
+                command.Parameters.Add(new SqlParameter("@VendorId", SqlDbType.Int, 256) { Value = VendorId  });
+                command.Parameters.Add(new SqlParameter("@InvoiceNumber", SqlDbType.NVarChar, 150) { Value = InvoiceNumber ?? (object)DBNull.Value });
+                command.Parameters.Add(new SqlParameter("@Amount", SqlDbType.Decimal, 25) { Value = Amount });
+                command.Parameters.Add(new SqlParameter("@OrderDate", SqlDbType.Date, 100) { Value = OrderDate  });
+                command.Parameters.Add(new SqlParameter("@TravelCharge", SqlDbType.Decimal, 100) { Value = TravelCharge });
+                command.Parameters.Add(new SqlParameter("@IsGSTBill", SqlDbType.Bit, 20) { Value = IsGSTBill });
+                //command.Parameters.Add(new SqlParameter("@ISPaymentDone", SqlDbType.NVarChar, 100) { Value = false });
+
+                var rows = await command.ExecuteNonQueryAsync();
+                return rows > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding vendor: {ex.Message}");
+                return false;
+            }
         }
     }
 }

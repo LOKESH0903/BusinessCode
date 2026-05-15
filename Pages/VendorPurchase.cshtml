@@ -16,7 +16,7 @@
 	<div class="row g-3">
 		<div class="col-md-12">
 			<label for="Vendor" class="form-label">Select Vendor</label>
-			<select id="Id" name="VendorName" required class="form-select">
+			<select id="ddlVendorId" name="vendorId" required class="form-select">
 				@foreach (var vendor in Model.VendorOptions)
 				{
 					// Preserve selection if form re-displays after post
@@ -25,5 +25,128 @@
 				}
 			</select>
 		</div>
+
+		<div class="col-md-6">
+			<label for="GST" class="form-label">Invoice Number</label>
+			<input type="text" class="form-control" id="txtInvoiceNumber" name="InvoiceNumber" required maxlength="150" placeholder="Invoice Number" />
+		</div>
+
+		<div class="col-md-6">
+			<label for="PurchaseAmount" class="form-label">Purchase Amount</label>
+			<input type="text" class="form-control" id="txtPurchaseAmount" name="PurchaseAmount" required maxlength="100" placeholder="Purchase Amount" />
+		</div>
+
+		<div class="col-md-6">
+			<label for="Order Date" class="form-label">Purchase Date</label>
+			<input type="date" id="txtOrderDate"  class="form-control" name="OrderDate" required value="" />
+		</div>
+
+		<div class="col-md-6">
+			<label for="Vendor" class="form-label">Is GST Bill</label>
+			<select id="ddlIsGST" name="IsGst" required class="form-select">
+				<option value="">Select</option>
+				<option value="true">Yes</option>
+				<option value="false">No</option>
+			</select>
+		</div>
+
+		<div class="col-12 mt-3">
+			<button type="submit" class="btn btn-primary">Save Vendor Purchase</button>
+			<a asp-page="./Index" class="btn btn-secondary ms-2">Cancel</a>
+		</div>
+
 	</div>
 </form>
+
+@section Scripts {
+	<script>
+		$('#txtPurchaseAmount').on('input', function() {
+		  this.value = this.value.replace(/[^0-9.]/g, '');
+		  if ((this.value.match(/\./g) || []).length > 1) {
+			this.value = this.value.replace(/\.+$/, "");
+		  }
+		});
+
+        (function () {
+            const form = document.querySelector('form[method="post"]');
+            const alertEl = document.getElementById('formAlert');
+            const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+            let submitting = false;
+
+            if (!form) return;
+
+            form.addEventListener('submit', function (e) {
+                // Always prevent default so native form POST is not fired when we do AJAX
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Client-side validation
+                if (!form.checkValidity()) {
+                    if (alertEl) {
+                        alertEl.style.display = 'block';
+                        alertEl.className = 'alert alert-danger';
+                        alertEl.textContent = 'Please correct the highlighted fields and try again.';
+                    }
+                    form.classList.add('was-validated');
+                    return;
+                }
+
+                // Prevent duplicate submissions
+                if (submitting) {
+                    return;
+                }
+                submitting = true;
+
+                // Disable submit button and show loading state
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.dataset.origText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = 'Saving...';
+                }
+
+                // Serialize form data (includes __RequestVerificationToken if present)
+                const data = $(form).serialize();
+
+                $.ajax({
+                    url: window.location.pathname,
+                    method: 'POST',
+                    data: data,
+                    success: function (response) {
+                        if (alertEl) {
+                            alertEl.style.display = 'block';
+                        }
+                        if (response && response.success) {
+                            if (alertEl) {
+                                alertEl.className = 'alert alert-success';
+                                alertEl.textContent = response.message || 'Saved successfully.';
+                            }
+                            // Reset form / remove validation styles
+                            form.classList.remove('was-validated');
+                            form.reset();
+                        } else {
+                            if (alertEl) {
+                                alertEl.className = 'alert alert-danger';
+                                alertEl.textContent = response && response.error ? response.error : 'Save failed.';
+                            }
+                        }
+                    },
+                    error: function (xhr) {
+                        if (alertEl) {
+                            alertEl.style.display = 'block';
+                            alertEl.className = 'alert alert-danger';
+                            const msg = xhr && xhr.responseText ? xhr.responseText : xhr.statusText || 'An error occurred.';
+                            alertEl.textContent = 'Error: ' + msg;
+                        }
+                    },
+                    complete: function () {
+                        submitting = false;
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = submitBtn.dataset.origText || 'Save Purchase';
+                        }
+                    }
+                });
+            }, false);
+        })();
+	</script>
+}

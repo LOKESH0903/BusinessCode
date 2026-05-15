@@ -13,10 +13,29 @@ namespace SRRAMOils.Pages
     {
         public List<SelectListItem> VendorOptions { get; set; } = new List<SelectListItem>();
 
+
+        public List<DropDownModel> VendorNames { get; set; } = new();
+
+        #region BindProperty
         [BindProperty]
         public string VendorName { get; set; } = string.Empty;
 
-        public List<DropDownModel> VendorNames { get; set; } = new();
+        [BindProperty]
+        public int vendorId { get; set; }
+
+
+        [BindProperty]
+        public string InvoiceNumber { get; set; } = string.Empty;
+
+        [BindProperty]
+        public decimal PurchaseAmount { get; set; }
+
+        [BindProperty]
+        public DateTime OrderDate { get; set; }
+
+        [BindProperty]
+        public bool IsGst { get; set; }
+        #endregion
 
         public async Task OnGetAsync()
         {
@@ -53,7 +72,16 @@ namespace SRRAMOils.Pages
 
         public async Task<IActionResult> OnPostAsync()
         {
-            return new JsonResult(new { success = true, name = VendorName });
+            
+            var invoiceNumber = InvoiceNumber;
+            var purchaseAmount = PurchaseAmount;
+            var orderDate = OrderDate;
+            var isGst = IsGst;
+
+            VendorService vs = new VendorService();
+           await vs.AddVendorPurchase(vendorId, InvoiceNumber, PurchaseAmount, OrderDate, 0, IsGst, false);
+
+            return new JsonResult(new { success = true, name = "VendorName" });
         }
     }
 }
