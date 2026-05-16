@@ -75,11 +75,8 @@
             if (!form) return;
 
             form.addEventListener('submit', function (e) {
-                // Always prevent default so native form POST is not fired when we do AJAX
                 e.preventDefault();
                 e.stopPropagation();
-
-                // Client-side validation
                 if (!form.checkValidity()) {
                     if (alertEl) {
                         alertEl.style.display = 'block';
@@ -90,22 +87,17 @@
                     return;
                 }
 
-                // Prevent duplicate submissions
                 if (submitting) {
                     return;
                 }
                 submitting = true;
-
-                // Disable submit button and show loading state
                 if (submitBtn) {
                     submitBtn.disabled = true;
                     submitBtn.dataset.origText = submitBtn.innerHTML;
                     submitBtn.innerHTML = 'Saving...';
                 }
 
-                // Serialize form data (includes __RequestVerificationToken if present)
                 const data = $(form).serialize();
-
                 $.ajax({
                     url: window.location.pathname,
                     method: 'POST',
@@ -119,7 +111,6 @@
                                 alertEl.className = 'alert alert-success';
                                 alertEl.textContent = response.message || 'Saved successfully.';
                             }
-                            // Reset form / remove validation styles
                             form.classList.remove('was-validated');
                             alert("Success");
                             form.reset();

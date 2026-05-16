@@ -1,0 +1,42 @@
+﻿@page
+@model SRRAMOils.Pages.VendorPurchaseReportModel
+@{
+}
+<form method="post" novalidate>
+	<div class="row g-3">
+		<div class="col-md-12">
+			<label for="Vendor" class="form-label">Select Vendor</label>
+			<select id="ddlVendorId" name="vendorId" required class="form-select">
+				@foreach (var vendor in Model.VendorOptions)
+				{
+					var selected = vendor.Value == Model.VendorName ? "selected" : null;
+					<option value="@vendor.Value" selected="@selected">@vendor.Text</option>
+				}
+			</select>
+		</div>
+	</div>
+	<div class="col-md-12">
+		<label for="Invoice" class="form-label>Select Invoice"></label>
+		<select id="ddlInvoiceNumber" name="invoiceNumber" required class="form-select">
+			@foreach (var invoice in Model.InvoiceNumber)
+			{
+				@* 				var selected = invoice.Value == Model.InvoiceNumber ? "selected" : null;
+				<option value="@invoice.Value" selected="@selected">@invoice.Text</option> *@
+			}
+		</select>
+	</div>
+
+
+	@section Scripts {
+		<script>
+
+
+			$('#ddlVendorId').change(function() {
+				alert("this value  :   " + $(this).val());
+				
+			});
+
+			
+		</script>
+	}
+</form>
