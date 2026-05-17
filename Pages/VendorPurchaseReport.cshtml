@@ -29,6 +29,9 @@
 
 	@section Scripts {
 		<script>
+			$(document).ready(function() {
+				$('#ddlInvoiceNumber').append($('<option>', {value: 0,text: "--Select Invoice--"}));
+			});
 			$('#ddlVendorId').change(function() {
 			$.ajax({
 				type: "GET",

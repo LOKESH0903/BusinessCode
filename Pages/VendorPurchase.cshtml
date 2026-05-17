@@ -49,6 +49,15 @@
 			</select>
 		</div>
 
+		<div class="col-md-6">
+			<label for="GST" class="form-label>">Purchase Type</label>
+			<select id="ddlPurchaseType" name="PurchaseType" required class="form-select">
+				<option value="">--Select--</option>
+				<option value="0">Credit</option>
+                <option value="1">Cash</option>
+			</select>
+        </div>
+
 		<div class="col-12 mt-3">
 			<button type="submit" class="btn btn-primary">Save Vendor Purchase</button>
 			<a asp-page="./Index" class="btn btn-secondary ms-2">Cancel</a>

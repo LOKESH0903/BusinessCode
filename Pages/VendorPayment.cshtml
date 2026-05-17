@@ -2,3 +2,76 @@
 @model SRRAMOils.Pages.VendorPaymentModel
 @{
 }
+<form method="post" novalidate>
+	<div class="row g-3">
+		<div class="col-md-12">
+			<label for="Vendor" class="form-label">Select Vendor</label>
+			<select id="ddlVendorId" name="vendorId" required class="form-select">
+				@foreach (var vendor in Model.VendorOptions)
+				{
+					var selected = vendor.Value == Model.VendorName ? "selected" : null;
+					<option value="@vendor.Value" selected="@selected">@vendor.Text</option>
+				}
+			</select>
+		</div>
+	</div>
+	<div class="col-md-12">
+		<label for="Invoice" class="form-label>Select Invoice"></label>
+		<select id="ddlInvoiceNumber" name="invoiceNumber" required class="form-select">
+			@foreach (var invoice in Model.InvoiceNumber)
+			{
+				@* 				var selected = invoice.Value == Model.InvoiceNumber ? "selected" : null;
+				<option value="@invoice.Value" selected="@selected">@invoice.Text</option> *@
+			}
+		</select>
+	</div>
+
+	@section Scripts {
+		<script>
+			$(document).ready(function() {
+				$('#ddlInvoiceNumber').append($('<option>', {value: 0,text: "--Select Invoice--"}));
+			});
+
+			$('#ddlVendorId').change(function() {
+			$.ajax({
+				type: "GET",
+				// Format: /PageName?handler=HandlerName
+				url: "/VendorPurchaseReport?handler=InvoiceByVendorId&vendorid="+$(this).val(),
+				contentType: "application/json",
+				dataType: "json",
+				success: function(response) {
+			var dataArray = JSON.stringify(response);
+
+
+
+			// 1. Extract the string and parse it into a real JavaScript array
+			var loopData = JSON.parse(dataArray);
+
+			// 2. Loop through the array using jQuery $.each
+			$.each(loopData, function(index, item) {
+					console.log(item);
+			var jsonString = item//'[{"Id":1,"Name":"TVS001234"}]';
+			var _data = $.parseJSON(jsonString); // Or JSON.parse(jsonString);
+
+			$("#ddlInvoiceNumber option").remove();
+			$('#ddlInvoiceNumber').append($('<option>', {value: 0,text: "--Select Invoice--"}));
+
+			$.each(_data, function(_index, _item) {
+				var _id = _item.Id;     // Returns 1
+				var _name = _item.Name; // Returns "TVS001234"
+				// Append the option to the dropdown
+				$('#ddlInvoiceNumber').append($('<option>', {
+					value: _id,
+					text: _name
+				}));
+			});
+			});
+				},
+				error: function (error) {
+					console.error("Error fetching data", error);
+				}
+			});
+			});
+		</script>
+	}
+</form>
