@@ -29,14 +29,46 @@
 
 	@section Scripts {
 		<script>
-
-
 			$('#ddlVendorId').change(function() {
-				alert("this value  :   " + $(this).val());
-				
-			});
+			$.ajax({
+				type: "GET",
+				// Format: /PageName?handler=HandlerName
+				url: "/VendorPurchaseReport?handler=InvoiceByVendorId&vendorid="+$(this).val(),
+				contentType: "application/json",
+				dataType: "json",
+				success: function(response) {
+			var dataArray = JSON.stringify(response);
 
-			
+
+
+			// 1. Extract the string and parse it into a real JavaScript array
+			var loopData = JSON.parse(dataArray);
+
+			// 2. Loop through the array using jQuery $.each
+			$.each(loopData, function(index, item) {
+					console.log(item);
+			var jsonString = item//'[{"Id":1,"Name":"TVS001234"}]';
+			var _data = $.parseJSON(jsonString); // Or JSON.parse(jsonString);
+
+			$("#ddlInvoiceNumber option").remove();
+			$('#ddlInvoiceNumber').append($('<option>', {value: 0,text: "--Select Invoice--"}));
+
+			$.each(_data, function(_index, _item) {
+				var _id = _item.Id;     // Returns 1
+				var _name = _item.Name; // Returns "TVS001234"
+				// Append the option to the dropdown
+				$('#ddlInvoiceNumber').append($('<option>', {
+					value: _id,
+					text: _name
+				}));
+			});
+			});
+				},
+				error: function (error) {
+					console.error("Error fetching data", error);
+				}
+			});
+			});
 		</script>
 	}
 </form>

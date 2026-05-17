@@ -148,7 +148,7 @@ namespace SRRAMOils.Service
         }
 
 
-        public async Task<List<DropDownModel>> GetInvoiceNumbersByVendor(int vendorId)
+        public List<DropDownModel> GetInvoiceNumbersByVendor(int vendorId)
         {
             var invoiceNumbers = new List<DropDownModel>();
             try
@@ -162,13 +162,13 @@ namespace SRRAMOils.Service
                                        ?? configuration["ConnectionStrings:Connection"];
                 if (string.IsNullOrWhiteSpace(connectionString))
                     throw new InvalidOperationException("Database connection string not found in configuration.");
-                await using var connection = new SqlConnection(connectionString);
-                await connection.OpenAsync();
-                await using var command = connection.CreateCommand();
+                using var connection = new SqlConnection(connectionString);
+                connection.OpenAsync();
+                using var command = connection.CreateCommand();
                 command.CommandText = "SELECT Id, InvoiceNumber FROM VendorPurchase WHERE VendorId = @VendorId";
                 command.Parameters.Add(new SqlParameter("@VendorId", SqlDbType.Int) { Value = vendorId });
-                await using var reader = await command.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
                 {
                     if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
                     {
@@ -214,10 +214,10 @@ namespace SRRAMOils.Service
                     VALUES
                     (@VendorId,@InvoiceNumber,@Amount,@OrderDate,@TravelCharge,@IsGSTBill)";
 
-                command.Parameters.Add(new SqlParameter("@VendorId", SqlDbType.Int, 256) { Value = VendorId  });
+                command.Parameters.Add(new SqlParameter("@VendorId", SqlDbType.Int, 256) { Value = VendorId });
                 command.Parameters.Add(new SqlParameter("@InvoiceNumber", SqlDbType.NVarChar, 150) { Value = InvoiceNumber ?? (object)DBNull.Value });
                 command.Parameters.Add(new SqlParameter("@Amount", SqlDbType.Decimal, 25) { Value = Amount });
-                command.Parameters.Add(new SqlParameter("@OrderDate", SqlDbType.Date, 100) { Value = OrderDate  });
+                command.Parameters.Add(new SqlParameter("@OrderDate", SqlDbType.Date, 100) { Value = OrderDate });
                 command.Parameters.Add(new SqlParameter("@TravelCharge", SqlDbType.Decimal, 100) { Value = TravelCharge });
                 command.Parameters.Add(new SqlParameter("@IsGSTBill", SqlDbType.Bit, 20) { Value = IsGSTBill });
                 //command.Parameters.Add(new SqlParameter("@ISPaymentDone", SqlDbType.NVarChar, 100) { Value = false });
