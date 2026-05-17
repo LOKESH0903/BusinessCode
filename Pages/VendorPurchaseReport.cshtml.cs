@@ -77,31 +77,8 @@ namespace SRRAMOils.Pages
         public JsonResult OnGetInvoiceByVendorId(int vendorid)
         {
             VendorService vs = new VendorService();
-            // Fetch invoice numbers based on the selected vendor
             InvoiceNumberList =  vs.GetInvoiceNumbersByVendor(vendorid);
-
             string json = JsonConvert.SerializeObject(InvoiceNumberList);
-            // Start with a placeholder "select" option
-            //var options = new List<SelectListItem>
-            //    {
-            //        new SelectListItem { Value = string.Empty, Text = "-- Select Invoice Number --", Selected = true }
-            //    };
-
-            //// Map InvoiceNumberList to SelectListItems
-            //var mapped = InvoiceNumberList
-            //    .Select(i =>
-            //    {
-            //        var type = i?.GetType();
-            //        string value = type?.GetProperty("Value")?.GetValue(i)?.ToString()
-            //                    ?? type?.GetProperty("Id")?.GetValue(i)?.ToString()
-            //                    ?? string.Empty;
-            //        string text = type?.GetProperty("Text")?.GetValue(i)?.ToString()
-            //                    ?? type?.GetProperty("Name")?.GetValue(i)?.ToString()
-            //                    ?? value;
-            //        return new SelectListItem { Value = value, Text = text };
-            //    })
-            //    .ToList();
-
             var data = new { data = json };
             return new JsonResult(data);
         }
