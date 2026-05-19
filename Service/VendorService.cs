@@ -188,7 +188,9 @@ namespace SRRAMOils.Service
         }
 
 
-        public async Task<bool> AddVendorPurchase(int VendorId, string InvoiceNumber, decimal Amount, DateTime OrderDate, decimal TravelCharge, bool IsGSTBill, bool ISPaymentDone)
+
+
+        public async Task<bool> AddVendorPurchase(int VendorId, string InvoiceNumber, decimal Amount, DateTime OrderDate, decimal TravelCharge, bool IsGSTBill, bool ISPaymentDone, bool IsCreditPayment)
         {
             try
             {
@@ -210,9 +212,9 @@ namespace SRRAMOils.Service
                 await using var command = connection.CreateCommand();
                 command.CommandText = @"
                     INSERT INTO VendorPurchase
-                    (VendorId,InvoiceNumber,Amount,OrderDate,TravelCharge,IsGSTBill)
+                    (VendorId,InvoiceNumber,Amount,OrderDate,TravelCharge,IsGSTBill,IsCreditPayment)
                     VALUES
-                    (@VendorId,@InvoiceNumber,@Amount,@OrderDate,@TravelCharge,@IsGSTBill)";
+                    (@VendorId,@InvoiceNumber,@Amount,@OrderDate,@TravelCharge,@IsGSTBill,@IsCreditPayment)";
 
                 command.Parameters.Add(new SqlParameter("@VendorId", SqlDbType.Int, 256) { Value = VendorId });
                 command.Parameters.Add(new SqlParameter("@InvoiceNumber", SqlDbType.NVarChar, 150) { Value = InvoiceNumber ?? (object)DBNull.Value });
@@ -220,7 +222,7 @@ namespace SRRAMOils.Service
                 command.Parameters.Add(new SqlParameter("@OrderDate", SqlDbType.Date, 100) { Value = OrderDate });
                 command.Parameters.Add(new SqlParameter("@TravelCharge", SqlDbType.Decimal, 100) { Value = TravelCharge });
                 command.Parameters.Add(new SqlParameter("@IsGSTBill", SqlDbType.Bit, 20) { Value = IsGSTBill });
-                //command.Parameters.Add(new SqlParameter("@ISPaymentDone", SqlDbType.NVarChar, 100) { Value = false });
+                command.Parameters.Add(new SqlParameter("@IsCreditPayment", SqlDbType.Bit, 20) { Value = IsCreditPayment });
 
                 var rows = await command.ExecuteNonQueryAsync();
                 return rows > 0;
@@ -230,6 +232,125 @@ namespace SRRAMOils.Service
                 Console.WriteLine($"Error adding vendor: {ex.Message}");
                 return false;
             }
+        }
+
+        public async Task<List<VendorPayment>> GetVendorPaymentsByInvoiceId(int vendorPurchaseId)
+        {
+            var payments = new List<VendorPayment>();
+            try
+            {
+                var configuration = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                    .Build();
+                var connectionString = configuration.GetConnectionString("DevConnection")
+                                       ?? configuration["ConnectionStrings:DefaultConnection"]
+                                       ?? configuration["ConnectionString"]
+                                       ?? configuration["ConnectionStrings:Connection"];
+                if (string.IsNullOrWhiteSpace(connectionString))
+                    throw new InvalidOperationException("Database connection string not found in configuration.");
+                await using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT PaymentDate, PT.PaymentModeName,Amount, PaymentReferenceNumber
+                    FROM VendorPayment VP INNER JOIN PaymentType PT ON VP.PaymentTypeId = PT.Id WHERE VP.VendorPurchaseId = @VendorPurchaseId";
+                command.Parameters.Add(new SqlParameter("@VendorPurchaseId", SqlDbType.Int) { Value = vendorPurchaseId });
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    payments.Add(new VendorPayment
+                    {
+                        PaymentDate = reader.IsDBNull(0) ? string.Empty : reader.GetDateTime(0).ToString("yyyy-MM-dd"),
+                        PaymentModeName = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                        Amount = reader.IsDBNull(2) ? 0 : reader.GetDecimal(2),
+                        PaymentReferenceNumber = reader.IsDBNull(3) ? string.Empty : reader.GetString(3)
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving vendor payments: {ex.Message}");
+            }
+
+            return payments;
+        }
+
+
+        public VendorPaymentHistory GetInvoiceDetailsByInvoiceId(int vendorPurchaseId)
+        {
+            VendorPaymentHistory paymentHistory = new VendorPaymentHistory();
+            try
+            {
+                var configuration = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                    .Build();
+                var connectionString = configuration.GetConnectionString("DevConnection")
+                                       ?? configuration["ConnectionStrings:DefaultConnection"]
+                                       ?? configuration["ConnectionString"]
+                                       ?? configuration["ConnectionStrings:Connection"];
+                if (string.IsNullOrWhiteSpace(connectionString))
+                    throw new InvalidOperationException("Database connection string not found in configuration.");
+                 using var connection = new SqlConnection(connectionString);
+                 connection.Open();
+                 using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT VP.Amount,  VP.OrderDate FROM VendorPurchase VP WHERE VP.Id = @VendorPurchaseId";
+                command.Parameters.Add(new SqlParameter("@VendorPurchaseId", SqlDbType.Int) { Value = vendorPurchaseId });
+                 using var reader =  command.ExecuteReader();
+                while ( reader.Read())
+                {
+                    paymentHistory.PurchaseAmount = reader.IsDBNull(0) ? 0 : reader.GetDecimal(0);
+                    paymentHistory.PurchaseDate = reader.IsDBNull(1) ? string.Empty : reader.GetDateTime(1).ToString("yyyy-MM-dd");
+                }
+
+                paymentHistory.Payments = GetVendorPayments(vendorPurchaseId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving vendor payments: {ex.Message}");
+            }
+
+            return paymentHistory;
+        }
+
+        private List<VendorPayment> GetVendorPayments(int vendorPurchaseId)
+        {
+            List<VendorPayment> paymentHistory = new List<VendorPayment>();
+            try
+            {
+                var configuration = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                    .Build();
+                var connectionString = configuration.GetConnectionString("DevConnection")
+                                       ?? configuration["ConnectionStrings:DefaultConnection"]
+                                       ?? configuration["ConnectionString"]
+                                       ?? configuration["ConnectionStrings:Connection"];
+                if (string.IsNullOrWhiteSpace(connectionString))
+                    throw new InvalidOperationException("Database connection string not found in configuration.");
+                using var connection = new SqlConnection(connectionString);
+                connection.Open();
+                using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT VP.PaymentDate, VP.Amount, PT.PaymentModeName, VP.PaymentReferenceNumber FROM VendorPayment VP INNER JOIN PaymentType PT ON VP.PaymentTypeId = PT.Id WHERE VendorPurchaseId = @VendorPurchaseId";
+                command.Parameters.Add(new SqlParameter("@VendorPurchaseId", SqlDbType.Int) { Value = vendorPurchaseId });
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    paymentHistory.Add(new VendorPayment
+                    {
+                        PaymentDate = reader.IsDBNull(0) ? string.Empty : reader.GetDateTime(0).ToString("yyyy-MM-dd"),
+                        Amount = reader.IsDBNull(1) ? 0 : reader.GetDecimal(1),
+                        PaymentModeName = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                        PaymentReferenceNumber = reader.IsDBNull(3) ? string.Empty : reader.GetString(3)
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving vendor payments: {ex.Message}");
+            }
+
+            return paymentHistory;
         }
     }
 }

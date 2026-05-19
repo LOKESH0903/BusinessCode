@@ -3,6 +3,7 @@
 @{
 }
 <form method="post" novalidate>
+	<h2>Vendor Payments</h2>
 	<div class="row g-3">
 		<div class="col-md-12">
 			<label for="Vendor" class="form-label">Select Vendor</label>
@@ -14,17 +15,33 @@
 				}
 			</select>
 		</div>
+		<div class="col-md-12">
+			<label for="Invoice" class="form-label>Select Invoice">Select Invoice</label>
+			<select id="ddlInvoiceNumber" name="invoiceNumber" required class="form-select">
+			</select>
+		</div>
 	</div>
-	<div class="col-md-12">
-		<label for="Invoice" class="form-label>Select Invoice"></label>
-		<select id="ddlInvoiceNumber" name="invoiceNumber" required class="form-select">
-			@foreach (var invoice in Model.InvoiceNumber)
-			{
-				@* 				var selected = invoice.Value == Model.InvoiceNumber ? "selected" : null;
-				<option value="@invoice.Value" selected="@selected">@invoice.Text</option> *@
-			}
-		</select>
+	<div class="col-md-12" style="margin-top:10px;">
 	</div>
+	<div div="divPaymentHistory" class="row g-3">
+		<div class="col-md-4">
+			<label class="form-label">Purchase Amount</label>
+			<input id="txtPurchaseAmount" class="form-control" readonly name="PurchaseAmount" value="" />
+		</div>
+		<div class="col-md-4">
+			<label class="form-label">Paid Amount</label>
+			<input id="txtPaidAmount" class="form-control" name="PaidAmount" value="" />
+		</div>
+		<div class="col-md-4">
+			<label class="form-label">Due Amount</label>
+			<input id="txtDueAmount" class="form-control" name="DueAmount" value="" />
+		</div>
+		<div class="col-md-4">
+			<label class="form-label">Purchase Date</label>
+			<input type="date" id="txtOrderDate" class="form-control" name="OrderDate" value="" />
+		</div>
+	</div>
+
 
 	@section Scripts {
 		<script>
@@ -71,6 +88,37 @@
 					console.error("Error fetching data", error);
 				}
 			});
+			});
+
+			$("#ddlInvoiceNumber").change(function() {
+				var vendorPurchaseId = $(this).val();
+				$.ajax({
+					type: "GET",
+					url: "/VendorPayment?handler=InvoiceDetailsByInvoiceId&vendorPurchaseId=" + vendorPurchaseId,
+					contentType: "application/json",
+					dataType: "json",
+					success: function(response) {
+								var dataArray = JSON.stringify(response);
+								var loopData = JSON.parse(dataArray);
+								$.each(loopData, function(index, item) {
+										console.log(item);
+								var jsonString = item
+								var _data = $.parseJSON(jsonString);
+								console.log("************************************************");
+								$("#txtPurchaseAmount").val(_data.PurchaseAmount);
+								$("#txtPaidAmount").val(_data.PaidAmount);
+								$("#txtDueAmount").val(_data.BalanceAmount);
+								$("#txtOrderDate").val(_data.PurchaseDate);
+								console.log("####################################################");
+								$.each(_data.Payments, function(_index, _item) {
+									console.log(_item);
+								});
+								});
+					},
+					error: function(error) {
+						console.error("Error fetching invoice details", error);
+					}
+				});
 			});
 		</script>
 	}

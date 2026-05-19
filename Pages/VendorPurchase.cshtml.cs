@@ -35,6 +35,9 @@ namespace SRRAMOils.Pages
 
         [BindProperty]
         public bool IsGst { get; set; }
+
+        [BindProperty]
+        public bool IsCreditPayment { get; set; }
         #endregion
 
         public async Task OnGetAsync()
@@ -79,7 +82,7 @@ namespace SRRAMOils.Pages
             var isGst = IsGst;
 
             VendorService vs = new VendorService();
-            if(!await vs.AddVendorPurchase(vendorId, InvoiceNumber, PurchaseAmount, OrderDate, 0, IsGst, false))
+            if(!await vs.AddVendorPurchase(vendorId, InvoiceNumber, PurchaseAmount, OrderDate, 0, IsGst, false, IsCreditPayment))
             {
                 return new JsonResult(new { success = false, name = "VendorName" });
             }

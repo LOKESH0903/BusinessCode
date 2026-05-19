@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json;
 using SRRAMOils.Models;
 using SRRAMOils.Service;
 
@@ -57,6 +58,15 @@ namespace SRRAMOils.Pages
             options.AddRange(mapped);
 
             VendorOptions = options;
+        }
+
+        public JsonResult OnGetInvoiceDetailsByInvoiceId(int vendorPurchaseId)
+        {
+            VendorService vs = new VendorService();
+            var vendorPaymentHistory = vs.GetInvoiceDetailsByInvoiceId(vendorPurchaseId);
+            string json = JsonConvert.SerializeObject(vendorPaymentHistory);
+            var data = new { data = json };
+            return new JsonResult(data);
         }
     }
 }
