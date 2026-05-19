@@ -30,16 +30,33 @@
 		</div>
 		<div class="col-md-4">
 			<label class="form-label">Paid Amount</label>
-			<input id="txtPaidAmount" class="form-control" name="PaidAmount" value="" />
+			<input id="txtPaidAmount" class="form-control" readonly name="PaidAmount" value="" />
 		</div>
 		<div class="col-md-4">
 			<label class="form-label">Due Amount</label>
-			<input id="txtDueAmount" class="form-control" name="DueAmount" value="" />
+			<input id="txtDueAmount" class="form-control" readonly name="DueAmount" value="" />
 		</div>
 		<div class="col-md-4">
 			<label class="form-label">Purchase Date</label>
-			<input type="date" id="txtOrderDate" class="form-control" name="OrderDate" value="" />
+			<input type="date" id="txtOrderDate" class="form-control" readonly name="OrderDate" value="" />
 		</div>
+
+
+		<table id="tblVendorPaymentHistory" class="table">
+			<thead>
+				<tr>
+					<th scope="col">#</th>
+					<th scope="col">Payment Date</th>
+					<th scope="col">Amount Paid</th>
+					<th scope="col">Payment Mode</th>
+					<th scope="col">Payment Reference Number</th>
+				</tr>
+			</thead>
+			<tbody>
+				
+			</tbody>
+		</table>
+
 	</div>
 
 
@@ -66,7 +83,6 @@
 
 			// 2. Loop through the array using jQuery $.each
 			$.each(loopData, function(index, item) {
-					console.log(item);
 			var jsonString = item//'[{"Id":1,"Name":"TVS001234"}]';
 			var _data = $.parseJSON(jsonString); // Or JSON.parse(jsonString);
 
@@ -101,18 +117,32 @@
 								var dataArray = JSON.stringify(response);
 								var loopData = JSON.parse(dataArray);
 								$.each(loopData, function(index, item) {
-										console.log(item);
 								var jsonString = item
 								var _data = $.parseJSON(jsonString);
-								console.log("************************************************");
 								$("#txtPurchaseAmount").val(_data.PurchaseAmount);
-								$("#txtPaidAmount").val(_data.PaidAmount);
-								$("#txtDueAmount").val(_data.BalanceAmount);
 								$("#txtOrderDate").val(_data.PurchaseDate);
-								console.log("####################################################");
+
+
+								var newRowContent = "";
+								var _paidAmount = 0;
+								var _dueAmount = 0;
 								$.each(_data.Payments, function(_index, _item) {
-									console.log(_item);
+											var _rowIndex = _index + 1;
+											newRowContent += "<tr>"
+											newRowContent += "<th scope='row'>"+_rowIndex+"</th>"
+											newRowContent += "<td>"+_item.PaymentDate+"</td>"
+											newRowContent += "<td>"+_item.Amount+"</td>"
+											newRowContent += "<td>"+_item.PaymentModeName+"</td>"
+											newRowContent += "<td>"+_item.PaymentReferenceNumber+"</td>"
+											newRowContent += "</tr>"
+											_paidAmount = _paidAmount + _item.Amount;
+
 								});
+
+								$("#tblVendorPaymentHistory tbody").append(newRowContent);
+								$("#txtPaidAmount").val(_paidAmount);
+								_dueAmount = parseFloat(_data.PurchaseAmount) - parseFloat(_paidAmount);
+								$("#txtDueAmount").val(_dueAmount);
 								});
 					},
 					error: function(error) {
