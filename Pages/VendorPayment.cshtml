@@ -42,7 +42,7 @@
 		</div>
 
 
-		<table id="tblVendorPaymentHistory" class="table">
+		<table id="tblVendorPaymentHistory" class="table" style="display:none">
 			<thead>
 				<tr>
 					<th scope="col">#</th>
@@ -126,6 +126,7 @@
 								var newRowContent = "";
 								var _paidAmount = 0;
 								var _dueAmount = 0;
+								$("#tblVendorPaymentHistory tbody").empty();
 								$.each(_data.Payments, function(_index, _item) {
 											var _rowIndex = _index + 1;
 											newRowContent += "<tr>"
@@ -138,8 +139,17 @@
 											_paidAmount = _paidAmount + _item.Amount;
 
 								});
+								if(_paidAmount > 0){
+									$("#tblVendorPaymentHistory").css("display", "block");
+									$("#tblVendorPaymentHistory tbody").append(newRowContent);
+								}else
+								{
+									$("#tblVendorPaymentHistory").css("display", "none");
 
-								$("#tblVendorPaymentHistory tbody").append(newRowContent);
+								}
+								
+
+								
 								$("#txtPaidAmount").val(_paidAmount);
 								_dueAmount = parseFloat(_data.PurchaseAmount) - parseFloat(_paidAmount);
 								$("#txtDueAmount").val(_dueAmount);
