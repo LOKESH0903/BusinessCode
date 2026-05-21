@@ -41,6 +41,12 @@
 			<input type="date" id="txtOrderDate" class="form-control" readonly name="OrderDate" value="" />
 		</div>
 
+		
+			<div class="col-12 mt-3" id="divMakeVendorPayment">
+			<button type="button" id="btnMakeVendorPayment" class="btn btn-primary">Make Vendor Payment</button>
+				<a asp-page="./Index" class="btn btn-secondary ms-2">Cancel</a>
+			</div>
+		
 
 		<table id="tblVendorPaymentHistory" class="table" style="display:none">
 			<thead>
@@ -147,8 +153,15 @@
 									$("#tblVendorPaymentHistory").css("display", "none");
 
 								}
-								
 
+								if(_data.PurchaseAmount <= _paidAmount)
+								{
+									$("#divMakeVendorPayment").css("display", "none");
+								}
+								else
+								{
+									$("#divMakeVendorPayment").css("display", "block");
+								}
 								
 								$("#txtPaidAmount").val(_paidAmount);
 								_dueAmount = parseFloat(_data.PurchaseAmount) - parseFloat(_paidAmount);
@@ -159,6 +172,11 @@
 						console.error("Error fetching invoice details", error);
 					}
 				});
+			});
+
+			$("#btnMakeVendorPayment").click(function() {
+				var vendorPurchaseId = $("#ddlInvoiceNumber").val();
+				window.location.href = "MakeVendorPayment?vendorPurchaseId=" + vendorPurchaseId;
 			});
 		</script>
 	}

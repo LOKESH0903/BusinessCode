@@ -1,0 +1,25 @@
+﻿@page
+@model SRRAMOils.Pages.MakeVendorPaymentModel
+@{
+}
+
+<form method="post" novalidate>
+	<div class="col-12">
+		<h3>Payement for Invoice Number :  <span class="font-monospace">@Model.InvoiceNumber</span> </h3> 
+	</div>
+	<div div="divPaymentHistory" class="row g-3">
+
+		<div class="col-md-4">
+			<label class="form-label">Purchase Amount</label>
+			<input id="txtPurchaseAmount" class="form-control" readonly name="PurchaseAmount" value="@Model.PurchaseAmount" />
+		</div>
+		<div class="col-md-4">
+			<label class="form-label">Due Amount</label>
+			<input id="txtDueAmount" class="form-control" readonly name="DueAmount" value="@Model.DueAmount" />
+		</div>
+		<div class="col-12 mt-3" id="divMakeVendorPayment">
+			<button type="Submit" id="btnMakeVendorPayment" class="btn btn-primary">Make Vendor Payment</button>
+			<a asp-page="./Index" class="btn btn-secondary ms-2">Cancel</a>
+		</div>
+	</div>
+</form>

@@ -3,14 +3,7 @@
 @{
 }
 
-@* Pseudocode / Plan:
-   - Remove all `asp-for` and `asp-validation-for` tag helpers.
-   - Replace labels with explicit `for` attributes and human-readable text.
-   - Replace inputs with explicit `name` and `id` attributes to preserve model binding.
-   - For boolean checkboxes, add a preceding hidden input with value="false" and set checkbox value="true".
-   - Replace validation spans with `data-valmsg-for` and `data-valmsg-replace="true"` so unobtrusive validation can still wire up.
-   - Keep antiforgery token, validation summary, and validation scripts partial intact.
-*@
+
 
 <form method="post" novalidate>
 	<div class="row g-3">

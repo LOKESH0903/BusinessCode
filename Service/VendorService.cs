@@ -294,13 +294,14 @@ namespace SRRAMOils.Service
                  connection.Open();
                  using var command = connection.CreateCommand();
                 command.CommandText = @"
-                    SELECT VP.Amount,  VP.OrderDate FROM VendorPurchase VP WHERE VP.Id = @VendorPurchaseId";
+                    SELECT VP.Amount,  VP.OrderDate, VP.InvoiceNumber FROM VendorPurchase VP WHERE VP.Id = @VendorPurchaseId";
                 command.Parameters.Add(new SqlParameter("@VendorPurchaseId", SqlDbType.Int) { Value = vendorPurchaseId });
                  using var reader =  command.ExecuteReader();
                 while ( reader.Read())
                 {
                     paymentHistory.PurchaseAmount = reader.IsDBNull(0) ? 0 : reader.GetDecimal(0);
                     paymentHistory.PurchaseDate = reader.IsDBNull(1) ? string.Empty : reader.GetDateTime(1).ToString("yyyy-MM-dd");
+                    paymentHistory.InvoiceId = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
                 }
 
                 paymentHistory.Payments = GetVendorPayments(vendorPurchaseId);

@@ -28,6 +28,8 @@
 
         public string PurchaseDate { get; set; } = string.Empty;
 
+        public string InvoiceId { get; set; } = string.Empty;
+
         public List<VendorPayment> Payments { get; set; } 
     }
 }
