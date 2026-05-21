@@ -8,7 +8,8 @@ namespace SRRAMOils.Pages
     public class MakeVendorPaymentModel : PageModel
     {
 
-
+        [BindProperty]
+        public int VendorPurchaseId { get; set; }
 
         [BindProperty]
         public decimal PurchaseAmount { get; set; }
@@ -18,16 +19,29 @@ namespace SRRAMOils.Pages
 
         [BindProperty]
         public string InvoiceNumber { get; set; } = string.Empty;
+
+        [BindProperty]
+        public decimal PayAmount { get; set; }
+
+        [BindProperty]
+        public int PayType { get; set; }
+
+        [BindProperty]
+        public string PaymentReference { get; set; } = string.Empty;
+
+        [BindProperty]
+        public DateTime PaymentDate { get; set; }
         public MakeVendorPaymentModel()
         {
-            
+
         }
         public void OnGet()
         {
             if (Request.Query["vendorPurchaseId"].ToString() != "")
             {
                 VendorService vs = new VendorService();
-                var _vendorPaymentHistory  = vs.GetInvoiceDetailsByInvoiceId(int.Parse(Request.Query["vendorPurchaseId"].ToString()));
+                VendorPurchaseId = int.Parse(Request.Query["vendorPurchaseId"].ToString());
+                var _vendorPaymentHistory = vs.GetInvoiceDetailsByInvoiceId(VendorPurchaseId);
                 PurchaseAmount = _vendorPaymentHistory.PurchaseAmount;
                 InvoiceNumber = _vendorPaymentHistory.InvoiceId;
                 if (_vendorPaymentHistory.Payments != null && _vendorPaymentHistory.Payments.Count > 0)
@@ -36,6 +50,23 @@ namespace SRRAMOils.Pages
                     DueAmount = (decimal)(PurchaseAmount - paidAmount);
                 }
             }
+        }
+
+        public IActionResult OnPost()
+        {
+            var _payAmount = PayAmount;
+            var _payType = PayType;
+            var _paymentReference = PaymentReference;   
+            var _paymentDate = PaymentDate;
+
+            VendorService vs = new VendorService();
+            var result = vs.VendorPayment(VendorPurchaseId, _payAmount, _payType, _paymentReference, _paymentDate);
+            if(result)
+            {
+                return new JsonResult(new { success = true, name = "VendorName" });
+            }
+
+            return new JsonResult(new { success = false, name = "VendorName" });
         }
     }
 }

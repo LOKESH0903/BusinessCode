@@ -290,14 +290,14 @@ namespace SRRAMOils.Service
                                        ?? configuration["ConnectionStrings:Connection"];
                 if (string.IsNullOrWhiteSpace(connectionString))
                     throw new InvalidOperationException("Database connection string not found in configuration.");
-                 using var connection = new SqlConnection(connectionString);
-                 connection.Open();
-                 using var command = connection.CreateCommand();
+                using var connection = new SqlConnection(connectionString);
+                connection.Open();
+                using var command = connection.CreateCommand();
                 command.CommandText = @"
                     SELECT VP.Amount,  VP.OrderDate, VP.InvoiceNumber FROM VendorPurchase VP WHERE VP.Id = @VendorPurchaseId";
                 command.Parameters.Add(new SqlParameter("@VendorPurchaseId", SqlDbType.Int) { Value = vendorPurchaseId });
-                 using var reader =  command.ExecuteReader();
-                while ( reader.Read())
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
                 {
                     paymentHistory.PurchaseAmount = reader.IsDBNull(0) ? 0 : reader.GetDecimal(0);
                     paymentHistory.PurchaseDate = reader.IsDBNull(1) ? string.Empty : reader.GetDateTime(1).ToString("yyyy-MM-dd");
@@ -352,6 +352,43 @@ namespace SRRAMOils.Service
             }
 
             return paymentHistory;
+        }
+
+        public bool VendorPayment(int VendorPurchaseId, decimal Amount, int PayType, string PaymentReference, DateTime PaymentDate)
+        {
+            try
+            {
+                var configuration = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                    .Build();
+                var connectionString = configuration.GetConnectionString("DevConnection")
+                                       ?? configuration["ConnectionStrings:DefaultConnection"]
+                                       ?? configuration["ConnectionString"]
+                                       ?? configuration["ConnectionStrings:Connection"];
+                if (string.IsNullOrWhiteSpace(connectionString))
+                    throw new InvalidOperationException("Database connection string not found in configuration.");
+                using var connection = new SqlConnection(connectionString);
+                connection.Open();
+                using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    INSERT INTO VendorPayment
+                    (VendorPurchaseId, Amount, PaymentTypeId, PaymentReferenceNumber, PaymentDate)
+                    VALUES
+                    (@VendorPurchaseId, @Amount, @PaymentTypeId, @PaymentReferenceNumber, @PaymentDate)";
+
+                command.Parameters.Add(new SqlParameter("@VendorPurchaseId", SqlDbType.Int) { Value = VendorPurchaseId });
+                command.Parameters.Add(new SqlParameter("@Amount", SqlDbType.Decimal) { Value = Amount });
+                command.Parameters.Add(new SqlParameter("@PaymentTypeId", SqlDbType.Int) { Value = PayType });
+                command.Parameters.Add(new SqlParameter("@PaymentReferenceNumber", SqlDbType.NVarChar, 200) { Value = PaymentReference ?? (object)DBNull.Value });
+                command.Parameters.Add(new SqlParameter("@PaymentDate", SqlDbType.DateTime) { Value = PaymentDate });
+                var rows = command.ExecuteNonQuery();
+                return rows > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error processing vendor payment: {ex.Message}");
+                return false;
+            }
         }
     }
 }
