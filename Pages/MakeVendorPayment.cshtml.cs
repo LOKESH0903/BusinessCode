@@ -31,6 +31,15 @@ namespace SRRAMOils.Pages
 
         [BindProperty]
         public DateTime PaymentDate { get; set; }
+
+        [BindProperty]
+        public string VendorName { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string CityName { get; set; } = string.Empty;
+
+        [BindProperty]
+        public string OrderDate { get; set; } = string.Empty;
         public MakeVendorPaymentModel()
         {
 
@@ -44,6 +53,9 @@ namespace SRRAMOils.Pages
                 var _vendorPaymentHistory = vs.GetInvoiceDetailsByInvoiceId(VendorPurchaseId);
                 PurchaseAmount = _vendorPaymentHistory.PurchaseAmount;
                 InvoiceNumber = _vendorPaymentHistory.InvoiceId;
+                VendorName = _vendorPaymentHistory.VendorName;
+                CityName = _vendorPaymentHistory.CityName;
+                OrderDate = _vendorPaymentHistory.OrderDate;
                 if (_vendorPaymentHistory.Payments != null && _vendorPaymentHistory.Payments.Count > 0)
                 {
                     var paidAmount = _vendorPaymentHistory.Payments.Sum(x => x.Amount);

@@ -293,8 +293,17 @@ namespace SRRAMOils.Service
                 using var connection = new SqlConnection(connectionString);
                 connection.Open();
                 using var command = connection.CreateCommand();
-                command.CommandText = @"
-                    SELECT VP.Amount,  VP.OrderDate, VP.InvoiceNumber FROM VendorPurchase VP WHERE VP.Id = @VendorPurchaseId";
+
+
+                //command.CommandText = @"
+                //    SELECT VP.Amount,  VP.OrderDate, VP.InvoiceNumber FROM VendorPurchase VP WHERE VP.Id = @VendorPurchaseId";
+
+
+                command.CommandText = @"SELECT VP.Amount,VP.OrderDate, VP.InvoiceNumber, V.VendorName, C.CityName, VP.OrderDate
+                        FROM VendorPurchase VP INNER JOIN Vendor V ON VP.VendorId = V.Id
+ 					    INNER JOIN City C ON V.CityId = C.Id WHERE VP.Id = @VendorPurchaseId";
+
+
                 command.Parameters.Add(new SqlParameter("@VendorPurchaseId", SqlDbType.Int) { Value = vendorPurchaseId });
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
@@ -302,6 +311,9 @@ namespace SRRAMOils.Service
                     paymentHistory.PurchaseAmount = reader.IsDBNull(0) ? 0 : reader.GetDecimal(0);
                     paymentHistory.PurchaseDate = reader.IsDBNull(1) ? string.Empty : reader.GetDateTime(1).ToString("yyyy-MM-dd");
                     paymentHistory.InvoiceId = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
+                    paymentHistory.VendorName = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
+                    paymentHistory.CityName = reader.IsDBNull(4) ? string.Empty : reader.GetString(4);
+                    paymentHistory.OrderDate = reader.IsDBNull(5) ? string.Empty : reader.GetDateTime(5).ToString("yyyy-MM-dd");
                 }
 
                 paymentHistory.Payments = GetVendorPayments(vendorPurchaseId);

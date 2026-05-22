@@ -30,6 +30,12 @@
 
         public string InvoiceId { get; set; } = string.Empty;
 
+        public string VendorName { get; set; } = string.Empty;
+
+        public string CityName { get; set; } = string.Empty;
+
+        public string OrderDate { get; set; } = string.Empty;
+
         public List<VendorPayment> Payments { get; set; } 
     }
 }
