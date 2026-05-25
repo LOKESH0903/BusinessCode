@@ -82,5 +82,15 @@ namespace SRRAMOils.Pages
             var data = new { data = json };
             return new JsonResult(data);
         }
+
+
+        public JsonResult OnGetClosedInvoiceByVendorId(int vendorid)
+        {
+            VendorService vs = new VendorService();
+            InvoiceNumberList = vs.GetClosedInvoiceNumbersByVendor(vendorid);
+            string json = JsonConvert.SerializeObject(InvoiceNumberList);
+            var data = new { data = json };
+            return new JsonResult(data);
+        }
     }
 }

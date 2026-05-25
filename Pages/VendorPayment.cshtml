@@ -7,7 +7,7 @@
 	<div class="row g-3">
 		<div class="col-md-12">
 			<label for="Vendor" class="form-label">Select Vendor</label>
-			<select id="ddlVendorId" name="vendorId" required class="form-select">
+			<select id="ddlVendorId" name="vendorId" class="form-select">
 				@foreach (var vendor in Model.VendorOptions)
 				{
 					var selected = vendor.Value == Model.VendorName ? "selected" : null;
@@ -15,22 +15,21 @@
 				}
 			</select>
 		</div>
-		<div class="col-md-12">
-			<label for="Invoice" class="form-label>Select Invoice">Select Un clear Invoices</label>
-			<select id="ddlInvoiceNumber" name="invoiceNumber" required class="form-select">
+		<div class="col-md-6">
+			<label for="invoiceNumber" class="form-label">Select pending Invoices</label>
+			<select id="ddlInvoiceNumber" name="invoiceNumber" class="form-select">
 			</select>
 		</div>
 
-		<div class="col-md-12">
-			<label class="form-label">Select Cleared / Closed Invoices</label>
+		<div class="col-md-6">
+			<label for="ClosedInvoice" class="form-label">Select Cleared / Closed Invoices</label>
 			<select id="ddlClosedInvoice" name="ClosedInvoice" class="form-select">
-
 			</select>
 		</div>
 	</div>
 	<div class="col-md-12" style="padding : 30px 0 0 0;">
 	</div>
-	<div div="divPaymentHistory" class="row g-3" style="border: 2px solid black;border-radius:5px;padding:5px 0 25px 0;">
+	<div id="divPaymentHistory" class="row g-3" style="border: 2px solid black;border-radius:5px;padding:5px 0 25px 0; visibility:hidden">
 		<div class="col-md-4">
 			<label class="form-label">Purchase Amount</label>
 			<input id="txtPurchaseAmount" class="form-control" readonly name="PurchaseAmount" value="" />
@@ -48,14 +47,17 @@
 			<input type="date" id="txtOrderDate" class="form-control" readonly name="OrderDate" value="" />
 		</div>
 
-		
-			<div class="col-12 mt-3" id="divMakeVendorPayment">
+
+		<div class="col-12 mt-3" id="divMakeVendorPayment">
 			<button type="button" id="btnMakeVendorPayment" class="btn btn-primary">Make Vendor Payment</button>
-				<a asp-page="./Index" class="btn btn-secondary ms-2">Cancel</a>
-			</div>
+			<a asp-page="./Index" class="btn btn-secondary ms-2">Cancel</a>
+		</div>
 	</div>
 
-	<table id="tblVendorPaymentHistory" class="table" style="border: 2px solid black;border-radius:5px;padding:25px 0 25px 0; width:100%;display:none">
+	<div id="divtable" class="lableFontColor" style="visibility:hidden">
+		<label class="form-label"> <h6><span id="spnVendorName"></span> invoice(<span id="spnInvoiceNumber"></span>) payment history </h6> </label>
+	</div>
+	<table id="tblVendorPaymentHistory" class="table" style="border: 2px solid black;border-radius:5px;padding:25px 0 25px 0; width:100%;visibility:hidden">
 		<thead>
 			<tr>
 				<th scope="col">#</th>
@@ -72,119 +74,152 @@
 
 	@section Scripts {
 		<script>
-			$(document).ready(function() {
-				$('#ddlInvoiceNumber').append($('<option>', {value: 0,text: "--Select Invoice--"}));
-				$('#ddlClosedInvoice').append($('<option>', {value: 0,text: "--Select Invoice--"}));
-			});
+				$(document).ready(function() {
+					$('#ddlInvoiceNumber').append($('<option>', {value: 0,text: "--Select Invoice--"}));
+					$('#ddlClosedInvoice').append($('<option>', {value: 0,text: "--Select Invoice--"}));
+				});
 
-			$('#ddlVendorId').change(function() {
-			$.ajax({
-				type: "GET",
-				// Format: /PageName?handler=HandlerName
-				url: "/VendorPurchaseReport?handler=InvoiceByVendorId&vendorid="+$(this).val(),
-				contentType: "application/json",
-				dataType: "json",
-				success: function(response) {
-			var dataArray = JSON.stringify(response);
-
-
-
-			// 1. Extract the string and parse it into a real JavaScript array
-			var loopData = JSON.parse(dataArray);
-
-			// 2. Loop through the array using jQuery $.each
-			$.each(loopData, function(index, item) {
-			var jsonString = item//'[{"Id":1,"Name":"TVS001234"}]';
-			var _data = $.parseJSON(jsonString); // Or JSON.parse(jsonString);
-
-			$("#ddlInvoiceNumber option").remove();
-			$('#ddlInvoiceNumber').append($('<option>', {value: 0,text: "--Select Invoice--"}));
-
-			$.each(_data, function(_index, _item) {
-				var _id = _item.Id;     // Returns 1
-				var _name = _item.Name; // Returns "TVS001234"
-				// Append the option to the dropdown
-				$('#ddlInvoiceNumber').append($('<option>', {
-					value: _id,
-					text: _name
-				}));
-			});
-			});
-				},
-				error: function (error) {
-					console.error("Error fetching data", error);
-				}
-			});
-			});
-
-			$("#ddlInvoiceNumber").change(function() {
-				var vendorPurchaseId = $(this).val();
+				$('#ddlVendorId').change(function() {
+					var _selectedddlId = $(this).val();
 				$.ajax({
 					type: "GET",
-					url: "/VendorPayment?handler=InvoiceDetailsByInvoiceId&vendorPurchaseId=" + vendorPurchaseId,
+					// Format: /PageName?handler=HandlerName
+					url: "/VendorPurchaseReport?handler=InvoiceByVendorId&vendorid="+_selectedddlId,
 					contentType: "application/json",
 					dataType: "json",
 					success: function(response) {
-								var dataArray = JSON.stringify(response);
-								var loopData = JSON.parse(dataArray);
-								$.each(loopData, function(index, item) {
-								var jsonString = item
-								var _data = $.parseJSON(jsonString);
-								$("#txtPurchaseAmount").val(_data.PurchaseAmount);
-								$("#txtOrderDate").val(_data.PurchaseDate);
+				var dataArray = JSON.stringify(response);
+				var loopData = JSON.parse(dataArray);
+				$.each(loopData, function(index, item) {
+				var jsonString = item
+				var _data = $.parseJSON(jsonString);
 
+				$("#ddlInvoiceNumber option").remove();
+				$('#ddlInvoiceNumber').append($('<option>', {value: 0,text: "--Select Invoice--"}));
 
-								var newRowContent = "";
-								var _paidAmount = 0;
-								var _dueAmount = 0;
-								$("#tblVendorPaymentHistory tbody").empty();
-								$.each(_data.Payments, function(_index, _item) {
-											var _rowIndex = _index + 1;
-											newRowContent += "<tr>"
-											newRowContent += "<th scope='row'>"+_rowIndex+"</th>"
-											newRowContent += "<td>"+_item.PaymentDate+"</td>"
-											newRowContent += "<td>"+_item.Amount+"</td>"
-											newRowContent += "<td>"+_item.PaymentModeName+"</td>"
-											newRowContent += "<td>"+_item.PaymentReferenceNumber+"</td>"
-											newRowContent += "</tr>"
-											_paidAmount = _paidAmount + _item.Amount;
-
-								});
-								if(_paidAmount > 0){
-									$("#tblVendorPaymentHistory").css("display", "block");
-									$("#tblVendorPaymentHistory tbody").append(newRowContent);
-								}else
-								{
-									$("#tblVendorPaymentHistory").css("display", "none");
-
-								}
-
-								if(_data.PurchaseAmount <= _paidAmount)
-								{
-									$("#divMakeVendorPayment").css("display", "none");
-								}
-								else
-								{
-									$("#divMakeVendorPayment").css("display", "block");
-								}
-
-								$("#divPaymentHistory").css("display", "block");
-								
-								$("#txtPaidAmount").val(_paidAmount);
-								_dueAmount = parseFloat(_data.PurchaseAmount) - parseFloat(_paidAmount);
-								$("#txtDueAmount").val(_dueAmount);
-								});
+				$.each(_data, function(_index, _item) {
+					var _id = _item.Id;     // Returns 1
+					var _name = _item.Name; // Returns "TVS001234"
+					// Append the option to the dropdown
+					$('#ddlInvoiceNumber').append($('<option>', {
+						value: _id,
+						text: _name
+					}));
+				});
+				});
+					fngetclosedInvoices(_selectedddlId);
 					},
-					error: function(error) {
-						console.error("Error fetching invoice details", error);
+					error: function (error) {
+						console.error("Error fetching data", error);
 					}
 				});
 			});
 
-			$("#btnMakeVendorPayment").click(function() {
-				var vendorPurchaseId = $("#ddlInvoiceNumber").val();
-				window.location.href = "MakeVendorPayment?vendorPurchaseId=" + vendorPurchaseId;
-			});
+				function fngetclosedInvoices(_id)
+				{
+						$.ajax({
+						type: "GET",
+						url: "/VendorPurchaseReport?handler=ClosedInvoiceByVendorId&vendorid="+_id,
+						contentType: "application/json",
+						dataType: "json",
+						success: function(response) {
+					var dataArray = JSON.stringify(response);
+					var loopData = JSON.parse(dataArray);
+					$.each(loopData, function(index, item) {
+					var jsonString = item
+					var _data = $.parseJSON(jsonString);
+
+						$("#ddlClosedInvoice option").remove();
+						$('#ddlClosedInvoice').append($('<option>', {value: 0,text: "--Select Invoice--"}));
+					$.each(_data, function(_index, _item) {
+						var _id = _item.Id;     // Returns 1
+						var _name = _item.Name; // Returns "TVS001234"
+							$('#ddlClosedInvoice').append($('<option>', {
+							value: _id,
+							text: _name
+						}));
+					});
+					});
+						},
+						error: function (error) {
+							console.error("Error fetching data", error);
+						}
+					});
+				}
+
+
+				$("#ddlInvoiceNumber").change(function() {
+					var vendorPurchaseId = $(this).val();
+					$.ajax({
+						type: "GET",
+						url: "/VendorPayment?handler=InvoiceDetailsByInvoiceId&vendorPurchaseId=" + vendorPurchaseId,
+						contentType: "application/json",
+						dataType: "json",
+						success: function(response) {
+									var dataArray = JSON.stringify(response);
+									var loopData = JSON.parse(dataArray);
+									$.each(loopData, function(index, item) {
+									var jsonString = item
+									var _data = $.parseJSON(jsonString);
+									$("#txtPurchaseAmount").val(_data.PurchaseAmount);
+									$("#txtOrderDate").val(_data.PurchaseDate);
+
+
+									var newRowContent = "";
+									var _paidAmount = 0;
+									var _dueAmount = 0;
+									$("#tblVendorPaymentHistory tbody").empty();
+									$.each(_data.Payments, function(_index, _item) {
+												var _rowIndex = _index + 1;
+												newRowContent += "<tr>"
+												newRowContent += "<th scope='row'>"+_rowIndex+"</th>"
+												newRowContent += "<td>"+_item.PaymentDate+"</td>"
+												newRowContent += "<td>"+_item.Amount+"</td>"
+												newRowContent += "<td>"+_item.PaymentModeName+"</td>"
+												newRowContent += "<td>"+_item.PaymentReferenceNumber+"</td>"
+												newRowContent += "</tr>"
+												_paidAmount = _paidAmount + _item.Amount;
+
+									});
+									if(_paidAmount > 0){
+										$("#tblVendorPaymentHistory").css("visibility", "visible");
+										$("#divtable").css("visibility", "visible");
+										$("#tblVendorPaymentHistory tbody").append(newRowContent);
+										$("#spnVendorName").text($("#ddlVendorId option:selected").text());
+										$("#spnInvoiceNumber").text($("#ddlInvoiceNumber option:selected").text());
+									}else
+									{
+										$("#tblVendorPaymentHistory").css("visibility", "hidden");
+										$("#divtable").css("visibility", "hidden");
+
+									}
+
+									if(_data.PurchaseAmount <= _paidAmount)
+									{
+										$("#divMakeVendorPayment").css("display", "none");
+									}
+									else
+									{
+										$("#divMakeVendorPayment").css("display", "block");
+									}
+
+									$("#divPaymentHistory").css("visibility", "visible");
+
+									$("#txtPaidAmount").val(_paidAmount);
+									_dueAmount = parseFloat(_data.PurchaseAmount) - parseFloat(_paidAmount);
+									$("#txtDueAmount").val(_dueAmount);
+									});
+						},
+						error: function(error) {
+							console.error("Error fetching invoice details", error);
+						}
+					});
+				});
+
+				$("#btnMakeVendorPayment").click(function() {
+					var vendorPurchaseId = $("#ddlInvoiceNumber").val();
+					window.location.href = "MakeVendorPayment?vendorPurchaseId=" + vendorPurchaseId;
+				});
 		</script>
 	}
 </form>

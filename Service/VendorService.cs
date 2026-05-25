@@ -188,6 +188,46 @@ namespace SRRAMOils.Service
         }
 
 
+        public List<DropDownModel> GetClosedInvoiceNumbersByVendor(int vendorId)
+        {
+            var invoiceNumbers = new List<DropDownModel>();
+            try
+            {
+                var configuration = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                    .Build();
+                var connectionString = configuration.GetConnectionString("DevConnection")
+                                       ?? configuration["ConnectionStrings:DefaultConnection"]
+                                       ?? configuration["ConnectionString"]
+                                       ?? configuration["ConnectionStrings:Connection"];
+                if (string.IsNullOrWhiteSpace(connectionString))
+                    throw new InvalidOperationException("Database connection string not found in configuration.");
+                using var connection = new SqlConnection(connectionString);
+                connection.OpenAsync();
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT Id, InvoiceNumber FROM VendorPurchase WHERE VendorId = @VendorId AND ISNULL(ISPaymentDone, 0) = 1";
+                command.Parameters.Add(new SqlParameter("@VendorId", SqlDbType.Int) { Value = vendorId });
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
+                    {
+                        invoiceNumbers.Add(new DropDownModel
+                        {
+                            Id = reader.GetInt32(0),
+                            Name = reader.GetString(1)
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving invoice numbers: {ex.Message}");
+            }
+            return invoiceNumbers;
+        }
+
+
 
 
         public async Task<bool> AddVendorPurchase(int VendorId, string InvoiceNumber, decimal Amount, DateTime OrderDate, decimal TravelCharge, bool IsGSTBill, bool ISPaymentDone, bool IsCreditPayment)
