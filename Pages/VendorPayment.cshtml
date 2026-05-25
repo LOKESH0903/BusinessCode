@@ -52,6 +52,9 @@
 			<button type="button" id="btnMakeVendorPayment" class="btn btn-primary">Make Vendor Payment</button>
 			<a asp-page="./Index" class="btn btn-secondary ms-2">Cancel</a>
 		</div>
+		<div class="col-12 mt-3">
+			<h5><span id="spnInvoiceStatus" style="color:red;"></span></h5>
+		</div>
 	</div>
 
 	<div id="divtable" class="lableFontColor" style="visibility:hidden">
@@ -211,10 +214,14 @@
 												if(_data.PurchaseAmount <= _paidAmount)
 												{
 													$("#divMakeVendorPayment").css("display", "none");
+													$("#spnInvoiceStatus").text("Invoice amount cleared.");
+													$("#spnInvoiceStatus").css("color", "green")
 												}
 												else
 												{
 													$("#divMakeVendorPayment").css("display", "block");
+													$("#spnInvoiceStatus").text("Invoice Amount Notification yet cleared.");
+													$("#spnInvoiceStatus").css("color", "red")
 												}
 
 												$("#divPaymentHistory").css("visibility", "visible");
