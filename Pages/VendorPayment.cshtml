@@ -16,14 +16,21 @@
 			</select>
 		</div>
 		<div class="col-md-12">
-			<label for="Invoice" class="form-label>Select Invoice">Select Invoice</label>
+			<label for="Invoice" class="form-label>Select Invoice">Select Un clear Invoices</label>
 			<select id="ddlInvoiceNumber" name="invoiceNumber" required class="form-select">
 			</select>
 		</div>
+
+		<div class="col-md-12">
+			<label class="form-label">Select Cleared / Closed Invoices</label>
+			<select id="ddlClosedInvoice" name="ClosedInvoice" class="form-select">
+
+			</select>
+		</div>
 	</div>
-	<div class="col-md-12" style="margin-top:10px;">
+	<div class="col-md-12" style="padding : 30px 0 0 0;">
 	</div>
-	<div div="divPaymentHistory" class="row g-3">
+	<div div="divPaymentHistory" class="row g-3" style="border: 2px solid black;border-radius:5px;padding:5px 0 25px 0;">
 		<div class="col-md-4">
 			<label class="form-label">Purchase Amount</label>
 			<input id="txtPurchaseAmount" class="form-control" readonly name="PurchaseAmount" value="" />
@@ -46,30 +53,28 @@
 			<button type="button" id="btnMakeVendorPayment" class="btn btn-primary">Make Vendor Payment</button>
 				<a asp-page="./Index" class="btn btn-secondary ms-2">Cancel</a>
 			</div>
-		
-
-		<table id="tblVendorPaymentHistory" class="table" style="border: 2px solid black;border-radius:5px;padding:5px 0 25px 0; width:100%;display:none">
-			<thead>
-				<tr>
-					<th scope="col">#</th>
-					<th scope="col">Payment Date</th>
-					<th scope="col">Amount Paid</th>
-					<th scope="col">Payment Mode</th>
-					<th scope="col">Payment Reference Number</th>
-				</tr>
-			</thead>
-			<tbody>
-				
-			</tbody>
-		</table>
-
 	</div>
+
+	<table id="tblVendorPaymentHistory" class="table" style="border: 2px solid black;border-radius:5px;padding:25px 0 25px 0; width:100%;display:none">
+		<thead>
+			<tr>
+				<th scope="col">#</th>
+				<th scope="col">Payment Date</th>
+				<th scope="col">Amount Paid</th>
+				<th scope="col">Payment Mode</th>
+				<th scope="col">Payment Reference Number</th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
 
 
 	@section Scripts {
 		<script>
 			$(document).ready(function() {
 				$('#ddlInvoiceNumber').append($('<option>', {value: 0,text: "--Select Invoice--"}));
+				$('#ddlClosedInvoice').append($('<option>', {value: 0,text: "--Select Invoice--"}));
 			});
 
 			$('#ddlVendorId').change(function() {
@@ -162,6 +167,8 @@
 								{
 									$("#divMakeVendorPayment").css("display", "block");
 								}
+
+								$("#divPaymentHistory").css("display", "block");
 								
 								$("#txtPaidAmount").val(_paidAmount);
 								_dueAmount = parseFloat(_data.PurchaseAmount) - parseFloat(_paidAmount);

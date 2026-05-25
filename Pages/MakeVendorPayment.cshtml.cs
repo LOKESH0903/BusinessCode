@@ -70,9 +70,17 @@ namespace SRRAMOils.Pages
             var _payType = PayType;
             var _paymentReference = PaymentReference;   
             var _paymentDate = PaymentDate;
+            var _dueAmount = DueAmount;
+
+            var _iSPaymentDone = false;
+
+            if(_dueAmount <= _payAmount)
+            {
+                _iSPaymentDone = true;
+            }
 
             VendorService vs = new VendorService();
-            var result = vs.VendorPayment(VendorPurchaseId, _payAmount, _payType, _paymentReference, _paymentDate);
+            var result = vs.VendorPayment(VendorPurchaseId, _payAmount, _payType, _paymentReference, _paymentDate, _iSPaymentDone);
             if(result)
             {
                 return new JsonResult(new { success = true, name = "VendorName" });

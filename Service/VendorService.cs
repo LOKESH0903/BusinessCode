@@ -126,7 +126,7 @@ namespace SRRAMOils.Service
                 await using var connection = new SqlConnection(connectionString);
                 await connection.OpenAsync();
                 await using var command = connection.CreateCommand();
-                command.CommandText = "SELECT Id, VendorName FROM Vendor WHERE IsActive = 1";
+                command.CommandText = "SELECT Id, VendorName FROM Vendor WHERE IsActive = 1 ORDER BY VendorName";
                 await using var reader = await command.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
@@ -165,7 +165,7 @@ namespace SRRAMOils.Service
                 using var connection = new SqlConnection(connectionString);
                 connection.OpenAsync();
                 using var command = connection.CreateCommand();
-                command.CommandText = "SELECT Id, InvoiceNumber FROM VendorPurchase WHERE VendorId = @VendorId";
+                command.CommandText = "SELECT Id, InvoiceNumber FROM VendorPurchase WHERE VendorId = @VendorId AND ISNULL(ISPaymentDone, 0) = 0";
                 command.Parameters.Add(new SqlParameter("@VendorId", SqlDbType.Int) { Value = vendorId });
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
@@ -366,7 +366,7 @@ namespace SRRAMOils.Service
             return paymentHistory;
         }
 
-        public bool VendorPayment(int VendorPurchaseId, decimal Amount, int PayType, string PaymentReference, DateTime PaymentDate)
+        public bool VendorPayment(int VendorPurchaseId, decimal Amount, int PayType, string PaymentReference, DateTime PaymentDate, bool ISPaymentDone)
         {
             try
             {
@@ -384,15 +384,16 @@ namespace SRRAMOils.Service
                 using var command = connection.CreateCommand();
                 command.CommandText = @"
                     INSERT INTO VendorPayment
-                    (VendorPurchaseId, Amount, PaymentTypeId, PaymentReferenceNumber, PaymentDate)
+                    (VendorPurchaseId, Amount, PaymentTypeId, PaymentReferenceNumber, PaymentDate, ISPaymentDone)
                     VALUES
-                    (@VendorPurchaseId, @Amount, @PaymentTypeId, @PaymentReferenceNumber, @PaymentDate)";
+                    (@VendorPurchaseId, @Amount, @PaymentTypeId, @PaymentReferenceNumber, @PaymentDate, @ISPaymentDone)";
 
                 command.Parameters.Add(new SqlParameter("@VendorPurchaseId", SqlDbType.Int) { Value = VendorPurchaseId });
                 command.Parameters.Add(new SqlParameter("@Amount", SqlDbType.Decimal) { Value = Amount });
                 command.Parameters.Add(new SqlParameter("@PaymentTypeId", SqlDbType.Int) { Value = PayType });
                 command.Parameters.Add(new SqlParameter("@PaymentReferenceNumber", SqlDbType.NVarChar, 200) { Value = PaymentReference ?? (object)DBNull.Value });
                 command.Parameters.Add(new SqlParameter("@PaymentDate", SqlDbType.DateTime) { Value = PaymentDate });
+                command.Parameters.Add(new SqlParameter("@ISPaymentDone", SqlDbType.Bit) { Value = ISPaymentDone });
                 var rows = command.ExecuteNonQuery();
                 return rows > 0;
             }
