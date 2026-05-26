@@ -32,6 +32,9 @@ namespace SRRAMOils.Pages
         [BindProperty]
         public string InvoiceNumber { get; set; } = string.Empty;
 
+        [BindProperty]
+        public List<VendorPaymentReport> VendorPaymentReports { get; set; } = new List<VendorPaymentReport>();
+
         public VendorPurchaseReportModel()
         {
         }
@@ -93,13 +96,18 @@ namespace SRRAMOils.Pages
             VendorOptions = options;
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public void OnPost()
         {
-            // Handle form submission logic here, such as saving the selected vendor and invoice number
-            // You can access VendorName and InvoiceNumber properties which are bound to the form inputs
-            // For example, you might want to save this information to a database or perform some processing
-            // After processing, you can redirect to another page or return a result
-            return RedirectToPage("/VendorPurchaseReport");
+            var _vendorId = VendorId;
+            if (_vendorId == 0)
+            {
+                ModelState.AddModelError(string.Empty, "Please select a vendor.");
+            }
+
+            VendorService vs = new VendorService();
+            VendorPaymentReports = vs.GetVendorPaymentReportByVendorId(_vendorId);
+
+            //return RedirectToPage("/VendorPurchaseReport");
         }
 
         public JsonResult OnGetInvoiceByVendorId(int vendorid)
@@ -231,5 +239,5 @@ namespace SRRAMOils.Pages
 
             return File(bytes, "application/pdf", filename);
         }
-    }   
+    }
 }

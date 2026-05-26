@@ -424,9 +424,9 @@ namespace SRRAMOils.Service
                 using var command = connection.CreateCommand();
                 command.CommandText = @"
                     INSERT INTO VendorPayment
-                    (VendorPurchaseId, Amount, PaymentTypeId, PaymentReferenceNumber, PaymentDate, ISPaymentDone)
+                    (VendorPurchaseId, Amount, PaymentTypeId, PaymentReferenceNumber, PaymentDate)
                     VALUES
-                    (@VendorPurchaseId, @Amount, @PaymentTypeId, @PaymentReferenceNumber, @PaymentDate, @ISPaymentDone)";
+                    (@VendorPurchaseId, @Amount, @PaymentTypeId, @PaymentReferenceNumber, @PaymentDate)";
 
                 command.Parameters.Add(new SqlParameter("@VendorPurchaseId", SqlDbType.Int) { Value = VendorPurchaseId });
                 command.Parameters.Add(new SqlParameter("@Amount", SqlDbType.Decimal) { Value = Amount });
@@ -435,6 +435,14 @@ namespace SRRAMOils.Service
                 command.Parameters.Add(new SqlParameter("@PaymentDate", SqlDbType.DateTime) { Value = PaymentDate });
                 command.Parameters.Add(new SqlParameter("@ISPaymentDone", SqlDbType.Bit) { Value = ISPaymentDone });
                 var rows = command.ExecuteNonQuery();
+
+                if (ISPaymentDone)
+                {
+                    using var updateCommand = connection.CreateCommand();
+                    updateCommand.CommandText = "UPDATE VendorPurchase SET ISPaymentDone = 1 WHERE Id = @VendorPurchaseId";
+                    updateCommand.Parameters.Add(new SqlParameter("@VendorPurchaseId", SqlDbType.Int) { Value = VendorPurchaseId });
+                    updateCommand.ExecuteNonQuery();
+                }
                 return rows > 0;
             }
             catch (Exception ex)
@@ -442,6 +450,60 @@ namespace SRRAMOils.Service
                 Console.WriteLine($"Error processing vendor payment: {ex.Message}");
                 return false;
             }
+        }
+
+        public List<VendorPaymentReport> GetVendorPaymentReportByVendorId(int vendorId)
+        {
+            var paymentReports = new List<VendorPaymentReport>();
+            try
+            {
+                var configuration = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                    .Build();
+                var connectionString = configuration.GetConnectionString("DevConnection")
+                                       ?? configuration["ConnectionStrings:DefaultConnection"]
+                                       ?? configuration["ConnectionString"]
+                                       ?? configuration["ConnectionStrings:Connection"];
+                if (string.IsNullOrWhiteSpace(connectionString))
+                    throw new InvalidOperationException("Database connection string not found in configuration.");
+                using var connection = new SqlConnection(connectionString);
+                connection.Open();
+                using var command = connection.CreateCommand();
+                
+                command.CommandText = @"SELECT 
+	                                    V.VendorName, VP.InvoiceNumber, VP.OrderDate, VP.Amount, ISNULL(VP.ISPaymentDone, 0) AS  ISPaymentDone,
+	                                    VPP.Amount AS PaidAmount,VPP.PaymentDate, VPP.PaymentReferenceNumber
+                                FROM VENDOR V INNER JOIN VendorPurchase VP ON V.Id = VP.VendorId 
+			                                  LEFT JOIN VendorPayment VPP ON VP.Id = VPP.VendorPurchaseId
+                                WHERE VP.VendorId = @VendorId ORDER BY VP.OrderDate ";
+
+                command.Parameters.Add(new SqlParameter("@VendorId", SqlDbType.Int) { Value = vendorId });
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    paymentReports.Add(new VendorPaymentReport
+                    {
+                        VendorName = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
+                        InvoiceNumber = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                        OrderDate = reader.IsDBNull(2) ? string.Empty : reader.GetDateTime(2).ToString("yyyy-MM-dd"),
+                        PurchaseAmount = reader.IsDBNull(3) ? 0 : reader.GetDecimal(3),
+                        ISPaymentDone = reader.IsDBNull(4) ? false : reader.GetBoolean(4),
+                        PaidAmount = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
+                        PaymentDate = reader.IsDBNull(6) ? string.Empty : reader.GetDateTime(6).ToString("yyyy-MM-dd"),
+                        PaymentReferenceNumber = reader.IsDBNull(7) ? string.Empty : reader.GetString(7)
+
+                        //InvoiceNumber = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
+                        //OrderDate = reader.IsDBNull(1) ? string.Empty : reader.GetDateTime(1).ToString("yyyy-MM-dd"),
+                        //PurchaseAmount = reader.IsDBNull(2) ? 0 : reader.GetDecimal(2),
+                        //ISPaymentDone = reader.IsDBNull(3) ? false : reader.GetBoolean(3)
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving vendor payment report: {ex.Message}");
+            }
+            return paymentReports;
         }
     }
 }
