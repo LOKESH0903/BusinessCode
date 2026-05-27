@@ -61,6 +61,10 @@ namespace SRRAMOils.Pages
                     var paidAmount = _vendorPaymentHistory.Payments.Sum(x => x.Amount);
                     DueAmount = (decimal)(PurchaseAmount - paidAmount);
                 }
+                else
+                {
+                    DueAmount = PurchaseAmount;
+                }
             }
         }
 

@@ -94,6 +94,8 @@ namespace SRRAMOils.Pages
             options.AddRange(mapped);
 
             VendorOptions = options;
+
+            ViewData["SelectedVendorName"] = string.Empty; // Clear any previously selected vendor name
         }
 
         public void OnPost()
@@ -106,7 +108,8 @@ namespace SRRAMOils.Pages
 
             VendorService vs = new VendorService();
             VendorPaymentReports = vs.GetVendorPaymentReportByVendorId(_vendorId);
-
+            
+            ViewData["SelectedVendorName"] = VendorPaymentReports.Select(x => x.VendorName).FirstOrDefault(); // Store selected vendor ID for use in the Razor view
             //return RedirectToPage("/VendorPurchaseReport");
         }
 

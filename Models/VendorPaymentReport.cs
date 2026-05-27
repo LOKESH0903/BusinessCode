@@ -22,5 +22,6 @@
         public string PaymentDate { get; set; } = string.Empty;
 
         public string PaymentReferenceNumber { get; set; }  = string.Empty;
+        public string BillPaymentMode { get; set; }= string.Empty;
     }
 }

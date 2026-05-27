@@ -2,28 +2,6 @@
 @model SRRAMOils.Pages.VendorPurchaseReportModel
 @using System.Linq
 
-@* 
-PSEUDOCODE / PLAN (detailed):
-1. Render existing vendor selection form (preserve current behavior).
-2. After the form, render a responsive Bootstrap-styled table bound to Model.VendorPaymentReports.
-3. Table columns:
-   - Date (formatted)
-   - Vendor (use VendorName or fallback to Model-selected vendor)
-   - Invoice / Document No
-   - Description / Notes
-   - Quantity (if available)
-   - Unit Price (if available, formatted currency)
-   - Amount (formatted currency)
-   - Payment Method
-   - Status
-   - Paid On (date)
-4. Loop over Model.VendorPaymentReports:
-   - For each report, render each column using null-safe access and sensible formatting.
-5. If no reports, show a friendly "No records" row.
-6. Add a footer row that shows the total amount (sum of Amount) if numeric values exist.
-7. Keep Scripts section for future JS and client-side enhancements.
-*@
-
 <form method="post" novalidate>
 	<div class="row g-3 mb-3">
 		<div class="col-md-12">
@@ -38,6 +16,7 @@ PSEUDOCODE / PLAN (detailed):
 		</div>
 		<div class="col-md-12">
 			<button type="submit" class="btn btn-primary">Generate Report</button>
+			<button id="btnDownloadReport" type="button" class="btn btn-primary">Download Report</button>
 		</div>
 	</div>
 </form>
@@ -48,30 +27,51 @@ PSEUDOCODE / PLAN (detailed):
 	</div>
 	<div class="card-body p-0">
 		<div class="table-responsive">
-			<table class="table table-striped table-bordered mb-0">
+			<table id="tblVendorPurchaseReport" style="border: 2px solid black;border-radius:5px;" class="table table-striped table-bordered mb-0">
 				<thead class="table-light">
 					<tr>
-						<th scope="col">InvoiceNumber</th>
+						<td colspan="8" class="text-center py-3"><h2>@ViewData["SelectedVendorName"].ToString() </h2>  Purchase payment details</td>
+					</tr>
+					<tr>
+						<th scope="col">Invoice #</th>
 						<th scope="col">Order Date</th>
-						<th scope="col">Purchase Amount</th>
-						<th scope="col">Is Payment Done</th>
-						<th scope="col" class="text-end">Paid Amount</th>
-						<th scope="col" class="text-end">Payment Date</th>
-						<th scope="col" class="text-end">Payment Reference Number</th>
+						<th scope="col">Bill Amount</th>
+						<th scope="col">Paid Amount</th>
+						<th scope="col">Due Amount</th>
+						<th scope="col">Paid Date</th>
+						<th scope="col">Bill Payment Mode</th>
+						<th scope="col">Payment Reference #</th>
 					</tr>
 				</thead>
 				<tbody>
 					@if (Model.VendorPaymentReports != null && Model.VendorPaymentReports.Any())
 					{
+						var _inVoiceNumber = "";
+						var _displayInvoiceNumber = "";
+						var _paidAmount = 0m;
 						foreach (var r in Model.VendorPaymentReports)
 						{
+							if (_inVoiceNumber != r.InvoiceNumber)
+							{
+								_paidAmount = 0m;
+								_inVoiceNumber = r.InvoiceNumber;
+								_displayInvoiceNumber = r.InvoiceNumber;
+								_paidAmount = _paidAmount + r.PaidAmount;
+							}
+							else
+							{
+								_displayInvoiceNumber = "";
+								_paidAmount = _paidAmount + r.PaidAmount;
+
+							}
 							<tr>
-								<td>@(r.InvoiceNumber ?? "")</td>
+								<td>@_displayInvoiceNumber</td>
 								<td>@(r.OrderDate ?? "")</td>
 								<td class="text-end">@(r.PurchaseAmount)</td>
-								<td></td>
 								<td class="text-end">@(r.PaidAmount)</td>
+								<td>@(r.PurchaseAmount - _paidAmount)    </td>
 								<td>@(r.PaymentDate ?? "")</td>
+								<td>@(r.BillPaymentMode ?? "")</td>
 								<td>@(r.PaymentReferenceNumber ?? "")</td>
 							</tr>
 						}
@@ -84,27 +84,50 @@ PSEUDOCODE / PLAN (detailed):
 					}
 				</tbody>
 				@* if (Model.VendorPaymentReports != null && Model.VendorPaymentReports.Any(r => r.Amount.HasValue)){ *@
-				
-					<tfoot class="table-light" style="display:none">
-						<tr>
-							<td colspan="6" class="text-end"><strong>Total</strong></td>
-							<td class="text-end">
-								
-									@* var total = Model.VendorPaymentReports.Where(r => r.Amount.HasValue).Sum(r => r.Amount!.Value); *@
-								
-								@* <strong>string.Format("{0:C}", total)</strong> *@
-							</td>
-							<td colspan="3"></td>
-						</tr>
-					</tfoot>
-				
+
+				<tfoot class="table-light" style="display:none">
+					<tr>
+						<td colspan="6" class="text-end"><strong>Total</strong></td>
+						<td class="text-end">
+
+							@* var total = Model.VendorPaymentReports.Where(r => r.Amount.HasValue).Sum(r => r.Amount!.Value); *@
+
+							@* <strong>string.Format("{0:C}", total)</strong> *@
+						</td>
+						<td colspan="3"></td>
+					</tr>
+				</tfoot>
+
 			</table>
 		</div>
 	</div>
 </div>
 
+
 @section Scripts {
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.22/pdfmake.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
 	<script>
-		// Placeholder for future client-side behaviors (sorting, filtering, export)
+		var _vendorName = "";
+		$('#ddlVendorId').change(function() {
+				_vendorName = $('#ddlVendorId option:selected').text();
+		});
+
+
+		$("#btnDownloadReport").click(function() {
+			var dt = new Date();
+				html2canvas($('#tblVendorPurchaseReport')[0], {
+				onrendered: function (canvas) {
+					var data = canvas.toDataURL();
+					var docDefinition = {
+						content: [{
+							image: data,
+							width: 500
+						}]
+					};
+					pdfMake.createPdf(docDefinition).download("PurchasePayment_"+dt.getDate() + "_" + (dt.getMonth() + 1) + "_" + dt.getFullYear() +"_"+ dt.getHours() + "_" + dt.getMinutes() + "_" + dt.getSeconds()+".pdf");
+				}
+			});
+		});
 	</script>
 }

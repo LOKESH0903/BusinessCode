@@ -472,7 +472,8 @@ namespace SRRAMOils.Service
                 
                 command.CommandText = @"SELECT 
 	                                    V.VendorName, VP.InvoiceNumber, VP.OrderDate, VP.Amount, ISNULL(VP.ISPaymentDone, 0) AS  ISPaymentDone,
-	                                    VPP.Amount AS PaidAmount,VPP.PaymentDate, VPP.PaymentReferenceNumber
+	                                    VPP.Amount AS PaidAmount,VPP.PaymentDate, VPP.PaymentReferenceNumber,
+                                        CASE WHEN ISNULL(VP.IsGSTBill, 0) = 1 THEN 'Bank Payment' ELSE 'UPI Payment' END AS BillPaymentMode
                                 FROM VENDOR V INNER JOIN VendorPurchase VP ON V.Id = VP.VendorId 
 			                                  LEFT JOIN VendorPayment VPP ON VP.Id = VPP.VendorPurchaseId
                                 WHERE VP.VendorId = @VendorId ORDER BY VP.OrderDate ";
@@ -485,13 +486,13 @@ namespace SRRAMOils.Service
                     {
                         VendorName = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
                         InvoiceNumber = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
-                        OrderDate = reader.IsDBNull(2) ? string.Empty : reader.GetDateTime(2).ToString("yyyy-MM-dd"),
+                        OrderDate = reader.IsDBNull(2) ? string.Empty : reader.GetDateTime(2).ToString("dd MMMM yyyy"),
                         PurchaseAmount = reader.IsDBNull(3) ? 0 : reader.GetDecimal(3),
                         ISPaymentDone = reader.IsDBNull(4) ? false : reader.GetBoolean(4),
                         PaidAmount = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
-                        PaymentDate = reader.IsDBNull(6) ? string.Empty : reader.GetDateTime(6).ToString("yyyy-MM-dd"),
-                        PaymentReferenceNumber = reader.IsDBNull(7) ? string.Empty : reader.GetString(7)
-
+                        PaymentDate = reader.IsDBNull(6) ? string.Empty : reader.GetDateTime(6).ToString("dd MMMM yyyy"),
+                        PaymentReferenceNumber = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
+                        BillPaymentMode = reader.IsDBNull(8) ? string.Empty : reader.GetString(8)
                         //InvoiceNumber = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
                         //OrderDate = reader.IsDBNull(1) ? string.Empty : reader.GetDateTime(1).ToString("yyyy-MM-dd"),
                         //PurchaseAmount = reader.IsDBNull(2) ? 0 : reader.GetDecimal(2),
