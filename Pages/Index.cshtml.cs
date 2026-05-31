@@ -1,20 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using SRRAMOils.Models;
+using SRRAMOils.Service;
 
 namespace SRRAMOils.Pages
 {
     public class IndexModel : PageModel
     {
-        private readonly ILogger<IndexModel> _logger;
-
-        public IndexModel(ILogger<IndexModel> logger)
+        [BindProperty]
+        public List<VendorPaymentReport> VendorPurchagePendingDetails { get; set; } = new List<VendorPaymentReport>();
+        public IndexModel()
         {
-            _logger = logger;
         }
 
         public void OnGet()
         {
-
+            DashboardService _dashboardService = new DashboardService();
+            VendorPurchagePendingDetails = _dashboardService.GetVendorPurchasePaymentPendingDetails();
         }
     }
 }
