@@ -473,7 +473,7 @@ namespace SRRAMOils.Service
                 command.CommandText = @"SELECT 
 	                                    V.VendorName, VP.InvoiceNumber, VP.OrderDate, VP.Amount, ISNULL(VP.ISPaymentDone, 0) AS  ISPaymentDone,
 	                                    VPP.Amount AS PaidAmount,VPP.PaymentDate, VPP.PaymentReferenceNumber,
-                                        CASE WHEN ISNULL(VP.IsGSTBill, 0) = 1 THEN 'Bank Payment' ELSE 'UPI Payment' END AS BillPaymentMode
+                                        CASE WHEN ISNULL(VP.IsGSTBill, 0) = 1 THEN 'GST' ELSE '' END AS BillPaymentMode
                                 FROM VENDOR V INNER JOIN VendorPurchase VP ON V.Id = VP.VendorId 
 			                                  LEFT JOIN VendorPayment VPP ON VP.Id = VPP.VendorPurchaseId
                                 WHERE VP.VendorId = @VendorId ORDER BY VP.OrderDate ";
