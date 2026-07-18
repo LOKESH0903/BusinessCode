@@ -1,0 +1,15 @@
+﻿@page
+@model SRRAMOils.Pages.CompanyNamesModel
+@{
+}
+<div class="container mt-5">
+    <h2 class="mb-4">Add Company</h2>
+    <form id="orgForm" method="post">
+        @Html.AntiForgeryToken()
+        <div class="mb-3">
+            <label for="vendorName" class="mb-2">Company Name</label>
+            <input type="text" class="form-control" id="txtCompanyName" name="CompanyName" placeholder="Enter Company name">
+        </div>
+        <button type="button" id="btnSubmit" class="btn btn-primary">Save</button>
+    </form>
+</div>

@@ -49,6 +49,8 @@
 						var _inVoiceNumber = "";
 						var _displayInvoiceNumber = "";
 						var _paidAmount = 0m;
+						var _purchaseAmount = 0m;
+						var _purchaseDate = "";
 						foreach (var r in Model.VendorPaymentReports)
 						{
 							if (_inVoiceNumber != r.InvoiceNumber)
@@ -57,17 +59,21 @@
 								_inVoiceNumber = r.InvoiceNumber;
 								_displayInvoiceNumber = r.InvoiceNumber;
 								_paidAmount = _paidAmount + r.PaidAmount;
+
+								_purchaseAmount = r.PurchaseAmount;
+								_purchaseDate = r.OrderDate ?? "";
 							}
 							else
 							{
 								_displayInvoiceNumber = "";
 								_paidAmount = _paidAmount + r.PaidAmount;
-
+								_purchaseAmount = 0m;
+								_purchaseDate = "";
 							}
 							<tr>
 								<td>@_displayInvoiceNumber</td>
-								<td>@(r.OrderDate ?? "")</td>
-								<td class="text-end">@(r.PurchaseAmount)</td>
+								<td>@_purchaseDate</td>
+								<td class="text-end">@_purchaseAmount</td>
 								<td class="text-end">@(r.PaidAmount)</td>
 								<td>@(r.PurchaseAmount - _paidAmount)    </td>
 								<td>@(r.PaymentDate ?? "")</td>

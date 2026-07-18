@@ -34,7 +34,7 @@ namespace SRRAMOils.Service
                                         FROM Vendor V INNER JOIN VendorPurchase VP ON V.Id = VP.VendorId	
                                                       LEFT JOIN VendorPayment VPT ON VP.Id = VPT.VendorPurchaseId
                                         WHERE ISNULL(VP.ISPaymentDone, 0) = 0
-                                        GROUP BY V.VendorName,VP.InvoiceNumber, VP.OrderDate, VP.Amount";
+                                        GROUP BY V.VendorName,VP.InvoiceNumber, VP.OrderDate, VP.Amount  order by V.VendorName";
 
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
