@@ -51,8 +51,11 @@
 						var _paidAmount = 0m;
 						var _purchaseAmount = 0m;
 						var _purchaseDate = "";
+						var _currentLoopIndex = 0;
+						var _totalDueAmount = 0m;
 						foreach (var r in Model.VendorPaymentReports)
 						{
+							var _invoicecount = Model.VendorPaymentReports.Where(x => x.InvoiceNumber == r.InvoiceNumber).Select(r => r.InvoiceNumber).Count();
 							if (_inVoiceNumber != r.InvoiceNumber)
 							{
 								_paidAmount = 0m;
@@ -62,6 +65,8 @@
 
 								_purchaseAmount = r.PurchaseAmount;
 								_purchaseDate = r.OrderDate ?? "";
+								
+								_currentLoopIndex = 1;
 							}
 							else
 							{
@@ -69,18 +74,39 @@
 								_paidAmount = _paidAmount + r.PaidAmount;
 								_purchaseAmount = 0m;
 								_purchaseDate = "";
+
+								_currentLoopIndex = _currentLoopIndex + 1;
 							}
-							<tr>
+
+							
+								// compute due for this rendered row and determine row CSS class
+								var _due = r.PurchaseAmount - _paidAmount;
+								var _rowClass = _due == 0m ? "table-success" : string.Empty;
+							<tr class='@_rowClass'>
 								<td>@_displayInvoiceNumber</td>
 								<td>@_purchaseDate</td>
 								<td class="text-end">@_purchaseAmount</td>
 								<td class="text-end">@(r.PaidAmount)</td>
-								<td>@(r.PurchaseAmount - _paidAmount)    </td>
+								<td>
+
+									@if(_invoicecount != _currentLoopIndex)
+									{
+										
+									}
+									else
+									{
+										@(r.PurchaseAmount - _paidAmount)
+										_totalDueAmount = _totalDueAmount + (r.PurchaseAmount - _paidAmount);
+									}
+									</td>
 								<td>@(r.PaymentDate ?? "")</td>
 								<td>@(r.BillPaymentMode ?? "")</td>
 								<td>@(r.PaymentReferenceNumber ?? "")</td>
 							</tr>
 						}
+						<tr>
+							<td colspan="10" class="text-center py-3" style="color:crimson"><h4>Pending Payments till @DateTime.Now.ToString("dddd, MMMM dd, yyyy")  : @_totalDueAmount </h4></td>
+						</tr>
 					}
 					else
 					{
